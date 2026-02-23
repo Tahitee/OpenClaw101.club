@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "next",
     "build": "next build --webpack",
+    "postbuild": "node scripts/generate-sitemap.mjs",
     "start": "next start"
   },
   "dependencies": {

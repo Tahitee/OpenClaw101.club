@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#16213e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0f3460;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#e74c3c;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ff6b6b;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)" />
+  
+  <!-- Decorative grid dots -->
+  <g opacity="0.05" fill="white">
+    <circle cx="100" cy="100" r="2" /><circle cx="200" cy="100" r="2" /><circle cx="300" cy="100" r="2" /><circle cx="400" cy="100" r="2" /><circle cx="500" cy="100" r="2" /><circle cx="600" cy="100" r="2" /><circle cx="700" cy="100" r="2" /><circle cx="800" cy="100" r="2" /><circle cx="900" cy="100" r="2" /><circle cx="1000" cy="100" r="2" /><circle cx="1100" cy="100" r="2" />
+    <circle cx="100" cy="200" r="2" /><circle cx="200" cy="200" r="2" /><circle cx="300" cy="200" r="2" /><circle cx="400" cy="200" r="2" /><circle cx="500" cy="200" r="2" /><circle cx="600" cy="200" r="2" /><circle cx="700" cy="200" r="2" /><circle cx="800" cy="200" r="2" /><circle cx="900" cy="200" r="2" /><circle cx="1000" cy="200" r="2" /><circle cx="1100" cy="200" r="2" />
+    <circle cx="100" cy="300" r="2" /><circle cx="200" cy="300" r="2" /><circle cx="300" cy="300" r="2" /><circle cx="400" cy="300" r="2" /><circle cx="500" cy="300" r="2" /><circle cx="600" cy="300" r="2" /><circle cx="700" cy="300" r="2" /><circle cx="800" cy="300" r="2" /><circle cx="900" cy="300" r="2" /><circle cx="1000" cy="300" r="2" /><circle cx="1100" cy="300" r="2" />
+    <circle cx="100" cy="400" r="2" /><circle cx="200" cy="400" r="2" /><circle cx="300" cy="400" r="2" /><circle cx="400" cy="400" r="2" /><circle cx="500" cy="400" r="2" /><circle cx="600" cy="400" r="2" /><circle cx="700" cy="400" r="2" /><circle cx="800" cy="400" r="2" /><circle cx="900" cy="400" r="2" /><circle cx="1000" cy="400" r="2" /><circle cx="1100" cy="400" r="2" />
+    <circle cx="100" cy="500" r="2" /><circle cx="200" cy="500" r="2" /><circle cx="300" cy="500" r="2" /><circle cx="400" cy="500" r="2" /><circle cx="500" cy="500" r="2" /><circle cx="600" cy="500" r="2" /><circle cx="700" cy="500" r="2" /><circle cx="800" cy="500" r="2" /><circle cx="900" cy="500" r="2" /><circle cx="1000" cy="500" r="2" /><circle cx="1100" cy="500" r="2" />
+  </g>
+  
+  <!-- Accent line at top -->
+  <rect x="0" y="0" width="1200" height="4" fill="url(#accent)" />
+  
+  <!-- Lobster emoji -->
+  <text x="600" y="230" text-anchor="middle" font-size="120" font-family="Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif">🦞</text>
+  
+  <!-- Title -->
+  <text x="600" y="340" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="72" font-weight="bold" fill="white">OpenClaw101</text>
+  
+  <!-- Subtitle -->
+  <text x="600" y="400" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="32" fill="#a0aec0">从零开始掌握 OpenClaw AI 助手框架</text>
+  
+  <!-- Tag line -->
+  <text x="600" y="460" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="22" fill="#718096">25+ 篇中文教程 · 安装部署 · 多渠道接入 · 进阶配置 · 实战案例</text>
+  
+  <!-- URL at bottom -->
+  <text x="600" y="570" text-anchor="middle" font-family="monospace" font-size="20" fill="#4a5568">openclaw101.club</text>
+  
+  <!-- Bottom accent line -->
+  <rect x="0" y="626" width="1200" height="4" fill="url(#accent)" />
+</svg>
