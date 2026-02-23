@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" width="480" height="480">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#141422" />
+      <stop offset="100%" stop-color="#1A1A2E" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="480" height="480" rx="52" fill="url(#bg)" />
+
+  <!-- Lobster emoji -->
+  <text x="240" y="220" text-anchor="middle" font-size="140">🦞</text>
+
+  <!-- OpenClaw101.club -->
+  <text x="240" y="340" 
+        font-family="'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace" 
+        font-size="28" font-weight="700" 
+        fill="#00E5FF" text-anchor="middle" letter-spacing="1"
+        filter="url(#glow)">
+    OpenClaw101.club
+  </text>
+
+  <!-- Subtle tagline -->
+  <text x="240" y="380" 
+        font-family="'Inter', 'Helvetica Neue', sans-serif" 
+        font-size="16" font-weight="400" 
+        fill="#555566" text-anchor="middle" letter-spacing="4">
+    从零开始掌握 AI 助手框架
+  </text>
+</svg>
