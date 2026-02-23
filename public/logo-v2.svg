@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <linearGradient id="clawRed" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF5A4F" />
+      <stop offset="100%" stop-color="#C0392B" />
+    </linearGradient>
+    <linearGradient id="clawRedDark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E74C3C" />
+      <stop offset="100%" stop-color="#962D22" />
+    </linearGradient>
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="400" height="400" rx="48" fill="#1C1C2E" />
+
+  <!-- ===== LEFT CLAW ===== -->
+  <!-- Upper pincer -->
+  <path d="
+    M 108 120
+    Q 72 138, 52 170
+    Q 38 196, 58 210
+    L 120 185
+    Q 105 160, 108 120
+    Z
+  " fill="url(#clawRed)" />
+  <!-- Lower pincer -->
+  <path d="
+    M 108 280
+    Q 72 262, 52 230
+    Q 38 204, 58 190
+    L 120 215
+    Q 105 240, 108 280
+    Z
+  " fill="url(#clawRedDark)" />
+  <!-- Arm -->
+  <path d="
+    M 120 185
+    L 120 215
+    L 168 210
+    L 168 190
+    Z
+  " fill="#D44637" />
+  <!-- Joint node (circuit style) -->
+  <circle cx="168" cy="200" r="10" fill="#1C1C2E" stroke="#00E5FF" stroke-width="2.5" />
+  <circle cx="168" cy="200" r="4" fill="#00E5FF" filter="url(#softGlow)" />
+  <!-- Circuit trace from joint -->
+  <line x1="178" y1="200" x2="195" y2="200" stroke="#00E5FF" stroke-width="1.5" opacity="0.5" />
+
+  <!-- ===== RIGHT CLAW ===== -->
+  <!-- Upper pincer -->
+  <path d="
+    M 292 120
+    Q 328 138, 348 170
+    Q 362 196, 342 210
+    L 280 185
+    Q 295 160, 292 120
+    Z
+  " fill="url(#clawRed)" />
+  <!-- Lower pincer -->
+  <path d="
+    M 292 280
+    Q 328 262, 348 230
+    Q 362 204, 342 190
+    L 280 215
+    Q 295 240, 292 280
+    Z
+  " fill="url(#clawRedDark)" />
+  <!-- Arm -->
+  <path d="
+    M 280 185
+    L 280 215
+    L 232 210
+    L 232 190
+    Z
+  " fill="#D44637" />
+  <!-- Joint node (circuit style) -->
+  <circle cx="232" cy="200" r="10" fill="#1C1C2E" stroke="#00E5FF" stroke-width="2.5" />
+  <circle cx="232" cy="200" r="4" fill="#00E5FF" filter="url(#softGlow)" />
+  <!-- Circuit trace from joint -->
+  <line x1="222" y1="200" x2="205" y2="200" stroke="#00E5FF" stroke-width="1.5" opacity="0.5" />
+
+  <!-- ===== CODE SYMBOL </> between claws ===== -->
+  <g filter="url(#softGlow)">
+    <!-- < -->
+    <path d="M 185 182 L 172 200 L 185 218" 
+          fill="none" stroke="#00E5FF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+    <!-- / -->
+    <line x1="192" y1="180" x2="208" y2="220" 
+          stroke="#00E5FF" stroke-width="3.5" stroke-linecap="round" opacity="0.7" />
+    <!-- > -->
+    <path d="M 215 182 L 228 200 L 215 218" 
+          fill="none" stroke="#00E5FF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+
+  <!-- ===== "101" TEXT ===== -->
+  <text x="200" y="330" 
+        font-family="'SF Mono', 'Fira Code', 'Consolas', monospace" 
+        font-size="64" font-weight="700" 
+        fill="#FFFFFF" text-anchor="middle" letter-spacing="6">
+    101
+  </text>
+
+  <!-- Subtle circuit dots decoration -->
+  <circle cx="128" cy="330" r="3" fill="#00E5FF" opacity="0.3" />
+  <circle cx="272" cy="330" r="3" fill="#00E5FF" opacity="0.3" />
+  <line x1="131" y1="330" x2="148" y2="330" stroke="#00E5FF" stroke-width="1" opacity="0.2" />
+  <line x1="252" y1="330" x2="269" y2="330" stroke="#00E5FF" stroke-width="1" opacity="0.2" />
+</svg>
