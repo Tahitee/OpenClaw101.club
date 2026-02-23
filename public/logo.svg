@@ -1,116 +1,64 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="800" height="400">
   <defs>
-    <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FF4136;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#C0392B;stop-opacity:1" />
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f0f23;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1a1a3e;stop-opacity:1" />
     </linearGradient>
-    <linearGradient id="clawGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#E74C3C;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#A93226;stop-opacity:1" />
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#FF4136" />
+      <stop offset="50%" style="stop-color:#E74C3C" />
+      <stop offset="100%" style="stop-color:#FF6B6B" />
     </linearGradient>
-    <linearGradient id="circuitGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#3498DB;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#2980B9;stop-opacity:1" />
+    <linearGradient id="numGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00E5FF" />
+      <stop offset="100%" style="stop-color:#3498DB" />
     </linearGradient>
-    <filter id="glow">
-      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-      <feMerge>
-        <feMergeNode in="coloredBlur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
   </defs>
 
-  <!-- Background circle -->
-  <circle cx="256" cy="256" r="240" fill="#1a1a2e" />
-  <circle cx="256" cy="256" r="230" fill="none" stroke="#3498DB" stroke-width="2" stroke-dasharray="12 8" opacity="0.4" />
+  <!-- Background -->
+  <rect width="800" height="400" rx="24" fill="url(#bgGrad)" />
 
-  <!-- Circuit lines (AI vibe) -->
-  <g stroke="#3498DB" stroke-width="1.5" opacity="0.3" fill="none">
-    <path d="M80 180 L130 180 L150 200" />
-    <path d="M80 330 L120 330 L140 310" />
-    <path d="M432 180 L382 180 L362 200" />
-    <path d="M432 330 L392 330 L372 310" />
-    <circle cx="80" cy="180" r="3" fill="#3498DB" />
-    <circle cx="80" cy="330" r="3" fill="#3498DB" />
-    <circle cx="432" cy="180" r="3" fill="#3498DB" />
-    <circle cx="432" cy="330" r="3" fill="#3498DB" />
+  <!-- Subtle grid lines -->
+  <g stroke="#ffffff" stroke-width="0.3" opacity="0.04">
+    <line x1="0" y1="80" x2="800" y2="80" />
+    <line x1="0" y1="160" x2="800" y2="160" />
+    <line x1="0" y1="240" x2="800" y2="240" />
+    <line x1="0" y1="320" x2="800" y2="320" />
+    <line x1="160" y1="0" x2="160" y2="400" />
+    <line x1="320" y1="0" x2="320" y2="400" />
+    <line x1="480" y1="0" x2="480" y2="400" />
+    <line x1="640" y1="0" x2="640" y2="400" />
   </g>
 
-  <!-- Lobster body (robotic/geometric style) -->
-  <!-- Main body - hexagonal shape -->
-  <path d="M256 160 L310 190 L310 310 L256 340 L202 310 L202 190 Z" 
-        fill="url(#bodyGrad)" stroke="#8B1A1A" stroke-width="2" />
-  
-  <!-- Body segments (robotic panels) -->
-  <line x1="202" y1="220" x2="310" y2="220" stroke="#8B1A1A" stroke-width="1.5" opacity="0.6" />
-  <line x1="202" y1="250" x2="310" y2="250" stroke="#8B1A1A" stroke-width="1.5" opacity="0.6" />
-  <line x1="202" y1="280" x2="310" y2="280" stroke="#8B1A1A" stroke-width="1.5" opacity="0.6" />
+  <!-- Lobster emoji area -->
+  <text x="120" y="215" font-family="Arial, sans-serif" font-size="100" text-anchor="middle" dominant-baseline="central">🦞</text>
 
-  <!-- Head plate -->
-  <path d="M220 160 L256 130 L292 160" fill="url(#bodyGrad)" stroke="#8B1A1A" stroke-width="2" />
-  
-  <!-- Robot eyes (LED style) -->
-  <circle cx="238" cy="185" r="14" fill="#1a1a2e" stroke="#2C3E50" stroke-width="2" />
-  <circle cx="274" cy="185" r="14" fill="#1a1a2e" stroke="#2C3E50" stroke-width="2" />
-  <circle cx="238" cy="185" r="8" fill="#00E5FF" filter="url(#glow)" />
-  <circle cx="274" cy="185" r="8" fill="#00E5FF" filter="url(#glow)" />
-  <!-- Eye highlights -->
-  <circle cx="234" cy="181" r="3" fill="white" opacity="0.8" />
-  <circle cx="270" cy="181" r="3" fill="white" opacity="0.8" />
+  <!-- Main text: OpenClaw -->
+  <text x="310" y="165" font-family="'SF Pro Display', 'Inter', 'Segoe UI', Arial, sans-serif" font-weight="800" font-size="72" fill="url(#textGrad)" letter-spacing="-2">
+    Open<tspan fill="url(#textGrad)" font-weight="900">Claw</tspan>
+  </text>
 
-  <!-- Antennae (with signal dots) -->
-  <path d="M240 135 L220 80" stroke="url(#clawGrad)" stroke-width="3" fill="none" stroke-linecap="round" />
-  <path d="M272 135 L292 80" stroke="url(#clawGrad)" stroke-width="3" fill="none" stroke-linecap="round" />
-  <!-- Antenna tips (signal receivers) -->
-  <circle cx="220" cy="78" r="6" fill="#00E5FF" filter="url(#glow)" />
-  <circle cx="292" cy="78" r="6" fill="#00E5FF" filter="url(#glow)" />
-  <!-- Signal waves -->
-  <path d="M208 65 Q214 55 220 65" stroke="#00E5FF" stroke-width="1.5" fill="none" opacity="0.6" />
-  <path d="M202 58 Q211 44 220 58" stroke="#00E5FF" stroke-width="1" fill="none" opacity="0.3" />
-  <path d="M292 65 Q298 55 304 65" stroke="#00E5FF" stroke-width="1.5" fill="none" opacity="0.6" />
-  <path d="M292 58 Q301 44 310 58" stroke="#00E5FF" stroke-width="1" fill="none" opacity="0.3" />
+  <!-- 101 text -->
+  <text x="680" y="165" font-family="'SF Mono', 'JetBrains Mono', 'Consolas', monospace" font-weight="700" font-size="72" fill="url(#numGrad)" letter-spacing="-1">
+    101
+  </text>
 
-  <!-- Left claw arm -->
-  <path d="M202 210 L160 190 L130 200" stroke="url(#clawGrad)" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round" />
-  <!-- Left claw (mechanical pincer) -->
-  <path d="M130 200 L95 170 L85 180 L110 200" fill="url(#clawGrad)" stroke="#8B1A1A" stroke-width="2" stroke-linejoin="round" />
-  <path d="M130 200 L95 230 L85 220 L110 200" fill="url(#clawGrad)" stroke="#8B1A1A" stroke-width="2" stroke-linejoin="round" />
-  <!-- Claw joint bolts -->
-  <circle cx="130" cy="200" r="4" fill="#2C3E50" stroke="#1a1a2e" stroke-width="1" />
-  <circle cx="160" cy="190" r="3" fill="#2C3E50" stroke="#1a1a2e" stroke-width="1" />
+  <!-- Tagline -->
+  <text x="400" y="235" font-family="'SF Pro Display', 'Inter', 'Segoe UI', Arial, sans-serif" font-weight="400" font-size="24" fill="#8892b0" text-anchor="middle" letter-spacing="4">
+    从零开始掌握 AI 助手框架
+  </text>
 
-  <!-- Right claw arm -->
-  <path d="M310 210 L352 190 L382 200" stroke="url(#clawGrad)" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round" />
-  <!-- Right claw (mechanical pincer) -->
-  <path d="M382 200 L417 170 L427 180 L402 200" fill="url(#clawGrad)" stroke="#8B1A1A" stroke-width="2" stroke-linejoin="round" />
-  <path d="M382 200 L417 230 L427 220 L402 200" fill="url(#clawGrad)" stroke="#8B1A1A" stroke-width="2" stroke-linejoin="round" />
-  <!-- Claw joint bolts -->
-  <circle cx="382" cy="200" r="4" fill="#2C3E50" stroke="#1a1a2e" stroke-width="1" />
-  <circle cx="352" cy="190" r="3" fill="#2C3E50" stroke="#1a1a2e" stroke-width="1" />
+  <!-- Divider line -->
+  <line x1="250" y1="265" x2="550" y2="265" stroke="#00E5FF" stroke-width="1" opacity="0.3" />
 
-  <!-- Tail segments (robotic) -->
-  <path d="M256 340 L270 370 L256 380 L242 370 Z" fill="url(#bodyGrad)" stroke="#8B1A1A" stroke-width="1.5" />
-  <path d="M256 380 L268 405 L256 412 L244 405 Z" fill="url(#bodyGrad)" stroke="#8B1A1A" stroke-width="1.5" />
-  <!-- Tail fan -->
-  <path d="M256 412 L235 440 L256 432 L277 440 Z" fill="url(#clawGrad)" stroke="#8B1A1A" stroke-width="1.5" />
+  <!-- Website URL -->
+  <text x="400" y="300" font-family="'SF Mono', 'JetBrains Mono', 'Consolas', monospace" font-weight="500" font-size="22" fill="#00E5FF" text-anchor="middle" letter-spacing="2" opacity="0.8">
+    openclaw101.club
+  </text>
 
-  <!-- Small legs (3 pairs, robotic) -->
-  <g stroke="url(#clawGrad)" stroke-width="3" fill="none" stroke-linecap="round">
-    <path d="M208 250 L175 265 L165 285" />
-    <path d="M208 275 L178 295 L170 315" />
-    <path d="M210 300 L182 320 L178 342" />
-    <path d="M304 250 L337 265 L347 285" />
-    <path d="M304 275 L334 295 L342 315" />
-    <path d="M302 300 L330 320 L334 342" />
-  </g>
-
-  <!-- Chest emblem (AI brain icon) -->
-  <circle cx="256" cy="235" r="16" fill="#1a1a2e" stroke="#00E5FF" stroke-width="1.5" />
-  <path d="M248 235 Q256 225 264 235 Q256 245 248 235" fill="none" stroke="#00E5FF" stroke-width="1.5" />
-  <circle cx="256" cy="235" r="3" fill="#00E5FF" filter="url(#glow)" />
-  <!-- Mini circuit from emblem -->
-  <line x1="256" y1="251" x2="256" y2="265" stroke="#00E5FF" stroke-width="1" opacity="0.5" />
-  <line x1="240" y1="235" x2="225" y2="235" stroke="#00E5FF" stroke-width="1" opacity="0.5" />
-  <line x1="272" y1="235" x2="287" y2="235" stroke="#00E5FF" stroke-width="1" opacity="0.5" />
+  <!-- Corner accents -->
+  <path d="M30 30 L30 60 M30 30 L60 30" stroke="#FF4136" stroke-width="2" fill="none" opacity="0.4" />
+  <path d="M770 30 L770 60 M770 30 L740 30" stroke="#FF4136" stroke-width="2" fill="none" opacity="0.4" />
+  <path d="M30 370 L30 340 M30 370 L60 370" stroke="#00E5FF" stroke-width="2" fill="none" opacity="0.4" />
+  <path d="M770 370 L770 340 M770 370 L740 370" stroke="#00E5FF" stroke-width="2" fill="none" opacity="0.4" />
 </svg>
