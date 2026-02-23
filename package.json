@@ -5,7 +5,7 @@
   "description": "OpenClaw101 - OpenClaw 中文教程网站",
   "scripts": {
     "dev": "next",
-    "build": "next build --webpack",
+    "build": "next build",
     "postbuild": "node scripts/generate-sitemap.mjs",
     "start": "next start"
   },
