@@ -1,0 +1,22 @@
+{
+  "name": "openclaw101-club",
+  "version": "1.0.0",
+  "private": true,
+  "description": "OpenClaw101 - OpenClaw 中文教程网站",
+  "scripts": {
+    "dev": "next",
+    "build": "next build --webpack",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "^15.3.2",
+    "nextra": "^4.6.1",
+    "nextra-theme-docs": "^4.6.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.0",
+    "typescript": "^5.8.0"
+  }
+}
