@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 520" width="520" height="520">
+  <defs>
+    <linearGradient id="red1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF6B5A" />
+      <stop offset="100%" stop-color="#E74C3C" />
+    </linearGradient>
+    <linearGradient id="red2" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FF6B5A" />
+      <stop offset="100%" stop-color="#C0392B" />
+    </linearGradient>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#151525" />
+      <stop offset="100%" stop-color="#1A1A2E" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="softShadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#000" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="520" height="520" rx="56" fill="url(#bg)" />
+
+  <!-- Subtle grid pattern -->
+  <g stroke="#ffffff" stroke-width="0.5" opacity="0.03">
+    <line x1="0" y1="130" x2="520" y2="130"/>
+    <line x1="0" y1="260" x2="520" y2="260"/>
+    <line x1="0" y1="390" x2="520" y2="390"/>
+    <line x1="130" y1="0" x2="130" y2="520"/>
+    <line x1="260" y1="0" x2="260" y2="520"/>
+    <line x1="390" y1="0" x2="390" y2="520"/>
+  </g>
+
+  <!-- ===== CLAW ICON (centered, bold, iconic) ===== -->
+  <g transform="translate(260, 195)" filter="url(#softShadow)">
+    <!-- Left claw -->
+    <g>
+      <!-- Upper pincer -->
+      <path d="M -28 -60 Q -80 -48, -105 -10 Q -112 4, -95 12 L -38 -8 Q -50 -30, -28 -60 Z" 
+            fill="url(#red1)" />
+      <!-- Lower pincer -->
+      <path d="M -28 60 Q -80 48, -105 10 Q -112 -4, -95 -12 L -38 8 Q -50 30, -28 60 Z" 
+            fill="url(#red2)" />
+      <!-- Arm connector -->
+      <rect x="-38" y="-10" width="26" height="20" rx="3" fill="#D94435" />
+    </g>
+
+    <!-- Right claw -->
+    <g>
+      <!-- Upper pincer -->
+      <path d="M 28 -60 Q 80 -48, 105 -10 Q 112 4, 95 12 L 38 -8 Q 50 -30, 28 -60 Z" 
+            fill="url(#red1)" />
+      <!-- Lower pincer -->
+      <path d="M 28 60 Q 80 48, 105 10 Q 112 -4, 95 -12 L 38 8 Q 50 30, 28 60 Z" 
+            fill="url(#red2)" />
+      <!-- Arm connector -->
+      <rect x="12" y="-10" width="26" height="20" rx="3" fill="#D94435" />
+    </g>
+
+    <!-- Center code symbol </> -->
+    <g filter="url(#glow)">
+      <path d="M -14 -16 L -26 0 L -14 16" 
+            fill="none" stroke="#00E5FF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+      <line x1="-5" y1="-18" x2="5" y2="18" 
+            stroke="#00E5FF" stroke-width="4" stroke-linecap="round" opacity="0.6" />
+      <path d="M 14 -16 L 26 0 L 14 16" 
+            fill="none" stroke="#00E5FF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+
+    <!-- Joint dots -->
+    <circle cx="-12" cy="0" r="4" fill="#00E5FF" opacity="0.4" />
+    <circle cx="12" cy="0" r="4" fill="#00E5FF" opacity="0.4" />
+  </g>
+
+  <!-- ===== OPENCLAW ===== -->
+  <text x="260" y="325" 
+        font-family="'Inter', 'SF Pro Display', 'Helvetica Neue', sans-serif" 
+        font-size="48" font-weight="800" 
+        fill="#FFFFFF" text-anchor="middle" letter-spacing="3">
+    OPENCLAW
+  </text>
+
+  <!-- ===== 101 with accent ===== -->
+  <text x="260" y="378" 
+        font-family="'SF Mono', 'Fira Code', 'JetBrains Mono', monospace" 
+        font-size="42" font-weight="700" 
+        fill="#00E5FF" text-anchor="middle" letter-spacing="12">
+    101
+  </text>
+
+  <!-- ===== Divider line ===== -->
+  <line x1="170" y1="400" x2="350" y2="400" stroke="#ffffff" stroke-width="1" opacity="0.12" />
+
+  <!-- ===== Website URL ===== -->
+  <text x="260" y="432" 
+        font-family="'SF Mono', 'Fira Code', 'JetBrains Mono', monospace" 
+        font-size="20" font-weight="400" 
+        fill="#888899" text-anchor="middle" letter-spacing="2">
+    openclaw101.club
+  </text>
+
+  <!-- Corner accent dots -->
+  <circle cx="40" cy="40" r="4" fill="#E74C3C" opacity="0.3" />
+  <circle cx="480" cy="40" r="4" fill="#00E5FF" opacity="0.3" />
+  <circle cx="40" cy="480" r="4" fill="#00E5FF" opacity="0.2" />
+  <circle cx="480" cy="480" r="4" fill="#E74C3C" opacity="0.2" />
+</svg>
