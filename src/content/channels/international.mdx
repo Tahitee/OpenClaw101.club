@@ -1,28 +1,381 @@
 ---
-title: WhatsApp / Telegram / Discord 接入
-description: 接入国际主流即时通讯平台
+title: 接入 WhatsApp / Telegram / Discord
+description: 接入国际主流即时通讯平台的完整教程
 ---
 
-import Giscus from '@components/Giscus'
+# 接入 WhatsApp / Telegram / Discord
 
-# WhatsApp / Telegram / Discord 接入
-
-OpenClaw 原生支持 WhatsApp、Telegram 和 Discord 三大国际主流通讯平台。本篇将分别介绍每个平台的接入方式和注意事项。
-
-## WhatsApp 接入
-
-通过 WhatsApp Business API 实现接入。我们会介绍如何申请 API 权限、配置 Webhook、处理消息格式等。
-
-## Telegram 接入
-
-Telegram Bot 是最容易上手的接入方式之一。从创建 Bot 到配置 OpenClaw，只需几步即可完成。
-
-## Discord 接入
-
-将 OpenClaw 作为 Discord Bot 接入你的服务器，让 AI 助手参与群组对话。支持斜杠命令、消息回复等多种交互方式。
-
-> 📝 本文内容正在完善中，敬请期待完整版本。
+OpenClaw 原生支持三大国际主流通讯平台：**WhatsApp**、**Telegram** 和 **Discord**。这三个渠道都是 OpenClaw 内置的，不需要额外安装插件。本篇将分别介绍每个平台的接入方式、配置方法和注意事项。
 
 ---
 
-<Giscus />
+## 一、WhatsApp 接入
+
+WhatsApp 是全球用户量最大的即时通讯应用。OpenClaw 通过 **Baileys**（WhatsApp Web 协议的开源实现）来接入 WhatsApp，需要通过手机扫码配对建立连接。
+
+### 1.1 准备工作
+
+你需要一个可用的手机号码来注册 WhatsApp。**强烈建议使用一个独立的手机号**，而不是你的个人号码。原因如下：
+
+- 独立号码可以让路由更清晰，避免个人消息和 AI 回复混淆
+- 减少误触发的风险
+- 如果出现问题，不会影响你的个人 WhatsApp
+
+**号码获取建议：**
+- 使用当地运营商的 eSIM 或预付费 SIM 卡
+- 号码只需接收一次验证短信，之后 WhatsApp Web 会话通过 `creds.json` 保持
+- **避免使用** TextNow、Google Voice 等虚拟号码，WhatsApp 会封锁这些号码
+
+### 1.2 QR 扫码配对
+
+配置完成后，使用以下命令进行 QR 扫码配对：
+
+```bash
+# 默认账号登录
+openclaw channels login
+
+# 指定账号登录（多账号场景）
+openclaw channels login --account work
+```
+
+终端会显示一个 QR 码，用你的 WhatsApp 手机端扫描即可完成配对。操作路径：**WhatsApp → 设置 → 已关联的设备 → 关联设备**。
+
+登录凭证会保存在 `~/.openclaw/credentials/whatsapp/<accountId>/creds.json`，下次启动时自动使用。
+
+### 1.3 配置示例
+
+**最简配置（推荐新手使用）：**
+
+```json
+{
+  "channels": {
+    "whatsapp": {
+      "dmPolicy": "allowlist",
+      "allowFrom": ["+8613800138000"]
+    }
+  }
+}
+```
+
+**完整配置示例：**
+
+```json
+{
+  "channels": {
+    "whatsapp": {
+      "dmPolicy": "allowlist",
+      "allowFrom": ["+8613800138000", "+8613900139000"],
+      "groupPolicy": "allowlist",
+      "groups": {
+        "*": {
+          "requireMention": true
+        }
+      },
+      "sendReadReceipts": true,
+      "ackReaction": {
+        "emoji": "👀",
+        "direct": true,
+        "group": "mentions"
+      },
+      "textChunkLimit": 4000,
+      "mediaMaxMb": 50
+    }
+  }
+}
+```
+
+### 1.4 DM 策略（dmPolicy）
+
+WhatsApp 的 DM 策略有以下几种模式：
+
+| 策略 | 说明 |
+|------|------|
+| `pairing` | **默认值**。未知发送者会收到一个配对码，你需要手动批准 |
+| `allowlist` | 只有 `allowFrom` 列表中的号码才能与 AI 对话 |
+| `open` | 对所有人开放（需要 `allowFrom: ["*"]`） |
+| `disabled` | 关闭所有 DM |
+
+批准配对码的命令：
+
+```bash
+openclaw pairing approve whatsapp <code>
+```
+
+### 1.5 群聊支持
+
+WhatsApp 群组默认需要 @mention 才会触发 AI 回复。可以通过 `/activation always` 命令切换为始终回复模式（仅群主可操作）。
+
+群组会话隔离在独立的 session 中：`agent:<agentId>:whatsapp:group:<jid>`。
+
+### 1.6 多账号支持
+
+OpenClaw 支持在同一个 Gateway 中运行多个 WhatsApp 账号：
+
+```json
+{
+  "channels": {
+    "whatsapp": {
+      "accounts": {
+        "personal": {
+          "allowFrom": ["+8613800138000"],
+          "sendReadReceipts": false
+        },
+        "work": {
+          "allowFrom": ["+8613900139000"],
+          "ackReaction": {
+            "emoji": "✅"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+每个账号需要单独执行 `openclaw channels login --account <id>` 进行扫码配对。
+
+---
+
+## 二、Telegram 接入
+
+Telegram 是最容易接入的平台之一。OpenClaw 使用 **grammY** 框架（TypeScript 实现的 Telegram Bot API 客户端）来连接 Telegram Bot。
+
+### 2.1 创建 Telegram Bot
+
+1. 在 Telegram 中搜索 **@BotFather** 并开始对话
+2. 发送 `/newbot` 命令
+3. 按提示输入 Bot 名称（显示名）和用户名（必须以 `bot` 结尾，如 `my_openclaw_bot`）
+4. BotFather 会返回一个 **Bot Token**，格式类似：`123456789:ABCdefGHIjklMNOpqrsTUVwxyz`
+5. 妥善保管这个 Token，它就是你 Bot 的"密码"
+
+**额外设置（可选但推荐）：**
+- 发送 `/setprivacy` → 选择你的 Bot → 设为 `Disable`，这样 Bot 能看到群组中的所有消息（而不仅仅是 @mention 和命令）
+- 发送 `/setdescription` 为你的 Bot 添加描述
+
+### 2.2 配置示例
+
+**最简配置：**
+
+```json
+{
+  "channels": {
+    "telegram": {
+      "botToken": "123456789:ABCdefGHIjklMNOpqrsTUVwxyz"
+    }
+  }
+}
+```
+
+**完整配置示例：**
+
+```json
+{
+  "channels": {
+    "telegram": {
+      "botToken": "123456789:ABCdefGHIjklMNOpqrsTUVwxyz",
+      "dmPolicy": "pairing",
+      "allowFrom": ["your_telegram_username"],
+      "groupPolicy": "allowlist",
+      "groupAllowFrom": ["*"],
+      "groups": {
+        "*": {
+          "requireMention": true
+        }
+      },
+      "linkPreview": false,
+      "mediaMaxMb": 50
+    }
+  }
+}
+```
+
+你也可以通过环境变量设置 Token（配置文件优先级更高）：
+
+```bash
+export TELEGRAM_BOT_TOKEN="123456789:ABCdefGHIjklMNOpqrsTUVwxyz"
+```
+
+### 2.3 DM 策略与 allowFrom
+
+Telegram 的 DM 策略与 WhatsApp 类似，支持 `pairing`、`allowlist`、`open`、`disabled` 四种模式。
+
+`allowFrom` 使用 Telegram **用户名**（不是数字 ID）：
+
+```json
+{
+  "channels": {
+    "telegram": {
+      "dmPolicy": "allowlist",
+      "allowFrom": ["alice", "bob"]
+    }
+  }
+}
+```
+
+### 2.4 群组支持
+
+Telegram 群组中，Bot 默认需要被 @mention 才会响应。群组会话隔离在：`agent:<agentId>:telegram:group:<chatId>`。
+
+群组配置选项：
+- `groupPolicy`：`open`、`allowlist`（默认）、`disabled`
+- `groupAllowFrom`：群组发送者白名单
+- `groups`：按群组 ID 配置特定规则
+
+### 2.5 Webhook 模式（可选）
+
+默认情况下，OpenClaw 使用**长轮询（long-poll）**模式接收 Telegram 消息。如果你的服务器有公网地址，可以切换为 Webhook 模式以获得更低延迟：
+
+```json
+{
+  "channels": {
+    "telegram": {
+      "botToken": "...",
+      "webhookUrl": "https://your-domain.com/telegram/webhook",
+      "webhookSecret": "your-random-secret-string"
+    }
+  }
+}
+```
+
+### 2.6 代理设置
+
+如果你的网络环境无法直接访问 Telegram API，可以配置代理：
+
+```json
+{
+  "channels": {
+    "telegram": {
+      "botToken": "...",
+      "proxy": "http://127.0.0.1:7890"
+    }
+  }
+}
+```
+
+---
+
+## 三、Discord 接入
+
+Discord 是全球最受欢迎的社群通讯平台之一。OpenClaw 通过 Discord Bot API + Gateway 实现接入，支持服务器频道、DM 和群组 DM。
+
+### 3.1 创建 Discord Bot
+
+1. 前往 [Discord Developer Portal](https://discord.com/developers/applications)
+2. 点击 **New Application**，输入应用名称
+3. 在左侧菜单中进入 **Bot** 页面
+4. 点击 **Reset Token** 获取 Bot Token（只显示一次，请妥善保存）
+5. **重要：** 开启以下 Intents：
+   - ✅ **Message Content Intent**（必须，否则无法读取消息内容）
+   - ✅ **Server Members Intent**（推荐，用于 allowlist 和用户名查找）
+6. 进入 **OAuth2 → URL Generator**：
+   - Scopes 选择 `bot`
+   - Bot Permissions 至少选择：`Send Messages`、`Read Message History`、`View Channels`
+   - 复制生成的邀请链接，在浏览器中打开，选择你的服务器完成邀请
+
+### 3.2 配置示例
+
+**最简配置：**
+
+```json
+{
+  "channels": {
+    "discord": {
+      "enabled": true,
+      "token": "YOUR_DISCORD_BOT_TOKEN"
+    }
+  }
+}
+```
+
+你也可以通过环境变量设置：
+
+```bash
+export DISCORD_BOT_TOKEN="YOUR_DISCORD_BOT_TOKEN"
+```
+
+**完整配置示例：**
+
+```json
+{
+  "channels": {
+    "discord": {
+      "enabled": true,
+      "token": "YOUR_DISCORD_BOT_TOKEN",
+      "dm": {
+        "policy": "pairing",
+        "allowFrom": ["your_discord_user_id"],
+        "groupEnabled": false
+      },
+      "guilds": {
+        "123456789012345678": {
+          "channels": {
+            "general": {
+              "requireMention": true
+            },
+            "ai-chat": {
+              "requireMention": false
+            }
+          }
+        }
+      },
+      "historyLimit": 20
+    }
+  }
+}
+```
+
+### 3.3 DM 支持
+
+Discord DM 默认使用 **pairing** 策略。DM 消息会合并到 agent 的主会话（`agent:main:main`）中。
+
+DM 策略选项：
+- `pairing`（默认）：未知用户收到配对码，需手动批准
+- `allowlist`：只允许 `allowFrom` 中的用户 ID
+- `open`：对所有人开放（需 `allowFrom: ["*"]`）
+- `disabled`：关闭 DM
+
+批准配对码：
+
+```bash
+openclaw pairing approve discord <code>
+```
+
+### 3.4 服务器（Guild）频道支持
+
+每个服务器频道会映射到独立的会话：`agent:<agentId>:discord:channel:<channelId>`。
+
+默认行为是需要 @mention Bot 才会触发回复。你可以针对特定频道设置 `requireMention: false` 让 Bot 响应所有消息。
+
+### 3.5 斜杠命令
+
+OpenClaw 默认会自动注册 Discord 斜杠命令（`commands.native` 默认为 `"auto"`）。用户可以通过 `/` 触发各种命令。如果不需要，可以在配置中关闭：
+
+```json
+{
+  "channels": {
+    "discord": {
+      "commands": {
+        "native": false
+      }
+    }
+  }
+}
+```
+
+### 3.6 Reactions 表情回复
+
+OpenClaw 的 agent 可以在 Discord 中发送表情 reactions。通过 `discord` 工具实现，需要当前渠道为 Discord 时才可用。
+
+---
+
+## 通用注意事项
+
+1. **安全第一**：三个平台的 DM 都默认启用 `pairing` 策略，防止陌生人未经授权使用你的 AI 助手
+2. **配置文件位置**：所有配置都在 `~/.openclaw/openclaw.json` 的 `channels` 字段中
+3. **启动 Gateway**：配置完成后，运行 `openclaw gateway start` 或 `openclaw gateway restart` 使配置生效
+4. **多渠道并行**：WhatsApp、Telegram、Discord 可以同时运行，OpenClaw 会自动按聊天来源路由消息
+5. **群聊上下文**：群聊中 OpenClaw 会注入最近的历史消息作为上下文，通过 `historyLimit` 控制数量
+
+---
+
+> 💬 **有问题或建议？** 欢迎在下方评论区留言讨论。

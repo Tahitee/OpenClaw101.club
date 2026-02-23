@@ -1,28 +1,433 @@
 ---
 title: Gateway 基础
-description: 了解 OpenClaw Gateway 的核心概念和基本操作
+description: 了解 OpenClaw Gateway 的核心概念、启动管理和部署方式
 ---
-
-import Giscus from '@components/Giscus'
 
 # Gateway 基础
 
-Gateway 是 OpenClaw 的核心组件，负责消息路由、会话管理和技能调度。本篇将深入讲解 Gateway 的工作原理和基本操作。
+Gateway 是 OpenClaw 的核心组件。理解 Gateway 的工作原理和管理方式，是使用 OpenClaw 的基础。本篇将从概念讲起，带你掌握 Gateway 的日常操作和高级部署。
 
 ## 什么是 Gateway
 
-Gateway 是 OpenClaw 的守护进程，它持续运行在后台，接收来自各个渠道的消息，调用 AI 模型处理，并将结果返回给用户。
+Gateway 是 OpenClaw 的**控制平面**（Control Plane），也是整个系统唯一需要持续运行的进程。你可以把它想象成一个「总调度中心」，它负责：
 
-## 基本操作
+- **接收消息**：从 Telegram、Discord、WhatsApp 等各个渠道接收用户发来的消息
+- **调用 AI 模型**：将消息和上下文发送给 LLM，获取 AI 的回复
+- **执行技能**：根据 AI 的判断，调用合适的工具和技能完成任务
+- **返回结果**：将 AI 的回复发送回对应的渠道
 
-包括启动、停止、重启 Gateway，以及如何查看运行状态和日志。掌握这些基本操作是使用 OpenClaw 的基础。
+Gateway 采用**单进程多路复用**（Single-process Multiplexing）的架构设计。这意味着一个 Gateway 进程可以同时处理来自多个渠道的消息和多个并发会话，不需要为每个渠道或每个用户启动单独的进程。这种设计带来了以下优势：
 
-## 配置 Gateway
+- **资源占用低**：一个进程搞定所有事情，512MB 内存的 VPS 即可运行
+- **部署简单**：不需要 Redis、PostgreSQL 等外部依赖，开箱即用
+- **运维方便**：只需要管理一个进程，简单清晰
 
-Gateway 的行为可以通过配置文件来控制。我们会介绍最常用的配置项和推荐的初始设置。
+## 启动和管理命令
 
-> 📝 本文内容正在完善中，敬请期待完整版本。
+Gateway 的管理通过 `openclaw gateway` 子命令完成：
+
+### 基本命令
+
+```bash
+# 前台运行（适合调试和开发）
+openclaw gateway
+
+# 以守护进程方式启动（后台运行）
+openclaw gateway start
+
+# 查看运行状态
+openclaw gateway status
+
+# 停止 Gateway
+openclaw gateway stop
+
+# 重启 Gateway（常用于更新配置后）
+openclaw gateway restart
+```
+
+### 前台运行 vs 守护进程
+
+**前台运行** (`openclaw gateway`)：
+- 日志直接输出到终端
+- 按 `Ctrl+C` 即可停止
+- 关闭终端会同时停止 Gateway
+- 适合开发调试和排查问题
+
+**守护进程** (`openclaw gateway start`)：
+- 在后台运行，不占用终端
+- 关闭终端也不会停止
+- 日志写入文件，通过 `openclaw gateway status` 查看
+- 适合正式部署
+
+```bash
+# 调试时推荐：前台运行 + 详细日志
+openclaw gateway --verbose
+
+# 正式部署：守护进程
+openclaw gateway start
+```
+
+## 默认端口与绑定模式
+
+Gateway 默认监听端口 **18789**，并提供一个 Web 控制面板（Control UI）。你可以通过配置文件或命令行参数来调整端口和绑定方式。
+
+### 绑定模式
+
+Gateway 支持三种绑定模式，决定了谁可以访问控制面板：
+
+| 模式 | 绑定地址 | 说明 |
+|------|---------|------|
+| `loopback` | `127.0.0.1` | 仅本机可访问（默认，最安全） |
+| `lan` | `0.0.0.0` | 局域网内可访问 |
+| `tailnet` | Tailscale IP | 仅 Tailscale 网络内可访问 |
+
+在配置文件中设置：
+
+```json
+{
+  "gateway": {
+    "port": 18789,
+    "bind": "loopback"
+  }
+}
+```
+
+> ⚠️ **安全提示**：除非你有充分的理由（且已配置好防火墙），否则不要将绑定模式设为 `lan` 并暴露到公网。`loopback` + SSH 隧道或 `tailnet` 模式是更安全的选择。
+
+### 修改端口
+
+如果默认端口 18789 与其他服务冲突，可以修改：
+
+```json
+{
+  "gateway": {
+    "port": 28789
+  }
+}
+```
+
+## 控制面板（Control UI）
+
+Gateway 内置了一个 Web 控制面板，让你可以通过浏览器直观地管理 OpenClaw。启动 Gateway 后，访问以下地址：
+
+```
+http://localhost:18789
+```
+
+控制面板提供了以下功能：
+
+- **实时日志**：查看 Gateway 的运行日志和消息流
+- **会话管理**：查看和管理活跃的对话会话
+- **配置编辑**：在线编辑配置文件（支持热更新）
+- **渠道状态**：监控各个渠道的连接状态
+- **性能监控**：查看资源占用和处理延迟
+
+这对于不喜欢命令行操作的用户来说非常友好。你可以直接在 UI 上修改配置，无需手动编辑 JSON 文件。
+
+## 认证方式
+
+为了保护你的 Gateway 不被未授权访问，OpenClaw 提供了两种认证方式：
+
+### Token 认证
+
+Gateway 启动时会生成一个随机 Token。你需要使用这个 Token 来访问 Control UI 和 API：
+
+```bash
+# 查看当前 Token
+openclaw gateway status
+```
+
+输出中会包含类似这样的信息：
+
+```
+Control UI: http://localhost:18789
+Token:      oc_xxxxxxxxxxxxxxxxxxxx
+```
+
+在浏览器中访问 Control UI 时，输入这个 Token 即可登录。
+
+### Password 认证
+
+你也可以在配置文件中设置固定密码：
+
+```json
+{
+  "gateway": {
+    "auth": {
+      "password": "your-secure-password"
+    }
+  }
+}
+```
+
+> 💡 **提示**：推荐使用 Token 认证，它会在每次 Gateway 重启时自动更换，安全性更高。如果你使用密码认证，请确保密码足够复杂。
+
+## 热更新配置
+
+在日常使用中，你经常需要修改配置——添加新渠道、调整模型参数、更新技能列表等。OpenClaw 支持**热更新**（Hot Reload），让你无需重启 Gateway 就能应用新配置。
+
+Gateway 提供了四种配置更新模式：
+
+| 模式 | 说明 |
+|------|------|
+| `hybrid` | 自动判断：能热更新的热更新，需要重启的提示重启（默认） |
+| `hot` | 强制热更新所有配置变更 |
+| `restart` | 任何配置变更都需要重启 |
+| `off` | 禁用配置文件监视 |
+
+在配置文件中设置：
+
+```json
+{
+  "gateway": {
+    "configReload": "hybrid"
+  }
+}
+```
+
+### 哪些配置可以热更新？
+
+- ✅ Agent 的系统提示词和模型参数
+- ✅ 技能列表的增减
+- ✅ 会话超时和上下文长度设置
+- ❌ 渠道的增删（需要重启）
+- ❌ 端口和绑定模式变更（需要重启）
+- ❌ 认证方式变更（需要重启）
+
+使用 `hybrid` 模式（默认）时，Gateway 会自动判断当前变更是否可以热更新。如果不行，它会在日志中提示你需要重启。
+
+```bash
+# 修改配置后手动触发重载
+openclaw gateway restart
+
+# 如果是 hybrid/hot 模式，修改配置文件后会自动检测变更
+```
+
+## 远程访问方式
+
+在大多数情况下，Gateway 运行在远程服务器上，而你需要从本地电脑访问控制面板。以下是两种推荐的安全远程访问方式。
+
+### SSH 隧道（推荐）
+
+最简单安全的方式，不需要修改 Gateway 的绑定模式：
+
+```bash
+# 在本地电脑执行
+ssh -L 18789:localhost:18789 your-user@your-server
+
+# 然后在浏览器访问
+# http://localhost:18789
+```
+
+这条命令会把远程服务器上的 18789 端口映射到本地的 18789 端口。Gateway 依然只监听 `127.0.0.1`（loopback），但你可以在本地浏览器中访问它。
+
+如果你经常需要这样做，可以在 SSH 配置文件中添加：
+
+```bash
+# ~/.ssh/config
+Host openclaw-server
+  HostName your-server-ip
+  User your-user
+  LocalForward 18789 localhost:18789
+```
+
+然后只需要 `ssh openclaw-server` 就会自动建立隧道。
+
+### Tailscale
+
+如果你使用 [Tailscale](https://tailscale.com/) 组网，可以将 Gateway 绑定到 Tailscale 网络：
+
+```json
+{
+  "gateway": {
+    "bind": "tailnet"
+  }
+}
+```
+
+这样 Gateway 只会在 Tailscale 虚拟网络内可访问，既安全又方便。你可以从任何加入同一 Tailscale 网络的设备访问控制面板：
+
+```
+http://your-tailscale-ip:18789
+```
+
+## 服务化部署
+
+在生产环境中，你希望 Gateway 能够开机自启、崩溃自动重启。以下是使用 systemd（Linux）和 launchd（macOS）的配置方法。
+
+### systemd（Linux）
+
+创建 systemd 服务文件：
+
+```bash
+sudo nano /etc/systemd/system/openclaw.service
+```
+
+写入以下内容：
+
+```ini
+[Unit]
+Description=OpenClaw Gateway
+After=network.target
+
+[Service]
+Type=simple
+User=openclaw
+Group=openclaw
+ExecStart=/usr/bin/env openclaw gateway
+Restart=always
+RestartSec=5
+Environment=OPENCLAW_HOME=/home/openclaw/.openclaw
+
+[Install]
+WantedBy=multi-user.target
+```
+
+启用并启动服务：
+
+```bash
+# 重载 systemd 配置
+sudo systemctl daemon-reload
+
+# 启用开机自启
+sudo systemctl enable openclaw
+
+# 启动服务
+sudo systemctl start openclaw
+
+# 查看运行状态
+sudo systemctl status openclaw
+
+# 查看日志
+sudo journalctl -u openclaw -f
+```
+
+### launchd（macOS）
+
+创建 plist 文件：
+
+```bash
+nano ~/Library/LaunchAgents/com.openclaw.gateway.plist
+```
+
+写入以下内容：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.openclaw.gateway</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/local/bin/openclaw</string>
+        <string>gateway</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/tmp/openclaw.stdout.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/openclaw.stderr.log</string>
+</dict>
+</plist>
+```
+
+加载服务：
+
+```bash
+launchctl load ~/Library/LaunchAgents/com.openclaw.gateway.plist
+```
+
+> 💡 **提示**：如果你在 onboarding 时使用了 `--install-daemon` 参数，OpenClaw 会自动为你配置好系统服务，通常不需要手动创建这些文件。
+
+## 常见问题
+
+### 1. 端口冲突
+
+```
+Error: listen EADDRINUSE: address already in use :::18789
+```
+
+**解决方案**：
+
+```bash
+# 查看谁占用了端口
+lsof -i :18789
+
+# 方案一：停止占用端口的进程
+kill <PID>
+
+# 方案二：修改 OpenClaw 的端口
+# 编辑 ~/.openclaw/openclaw.json，修改 gateway.port
+```
+
+### 2. 认证失败
+
+访问 Control UI 时提示认证失败。
+
+**解决方案**：
+
+```bash
+# 重新查看 Token
+openclaw gateway status
+
+# 如果使用密码认证，确认配置文件中的密码正确
+cat ~/.openclaw/openclaw.json | grep -A3 auth
+```
+
+### 3. Gateway 频繁重启
+
+**可能原因**：配置文件错误，或 API Key 无效。
+
+**解决方案**：
+
+```bash
+# 运行诊断
+openclaw doctor
+
+# 以前台模式启动查看详细错误
+openclaw gateway --verbose
+```
+
+### 4. 渠道连接失败
+
+某个渠道显示 `disconnected` 状态。
+
+**解决方案**：
+
+```bash
+# 检查渠道配置
+openclaw doctor
+
+# 确认渠道所需的 Token/API Key 是否正确
+# 确认服务器网络是否能访问渠道的 API
+curl -I https://api.telegram.org
+```
+
+### 5. 内存占用过高
+
+**解决方案**：
+
+```bash
+# 检查活跃会话数量
+openclaw status
+
+# 考虑缩短会话超时时间
+# 在配置文件中设置 session.ttl
+```
+
+## 下一步
+
+掌握了 Gateway 基础之后，建议继续阅读：
+
+1. **[配置文件详解](/docs/config/config-guide)** — 深入了解 OpenClaw 的配置体系
+2. **[打造你的 AI 人设](/docs/config/persona)** — 赋予你的 AI 助手独特的人格
+3. **[渠道配置](/docs/channels/overview)** — 连接你常用的通讯平台
 
 ---
 
-<Giscus />
+> 💬 **有问题或建议？** 欢迎在下方评论区留言讨论。

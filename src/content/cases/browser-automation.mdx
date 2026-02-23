@@ -1,14 +1,307 @@
 ---
 title: "浏览器自动化：让 AI 帮你操作网页"
-description: 敬请期待
+description: "使用 OpenClaw 的 browser 工具实现网页自动化操作，包括填表、抓取、截图等实战案例"
 ---
 
 # 浏览器自动化：让 AI 帮你操作网页
 
-> 🚧 本文正在撰写中，敬请期待...
+OpenClaw 内置了强大的浏览器自动化能力。你的 AI 助手可以打开网页、截图、填表、点击按钮、提取信息 —— 就像一个帮你操作电脑的虚拟助手。本文介绍 browser 工具的使用方法和实战技巧。
 
-本文将通过实战案例介绍 OpenClaw 的高级用法。
+## Browser 工具概览
+
+OpenClaw 的 browser 工具基于 Playwright 构建，提供以下核心能力：
+
+- **浏览器生命周期管理**：启动、停止、查看状态
+- **页面导航**：打开 URL、前进后退
+- **页面分析**：快照（snapshot）获取页面结构、截图（screenshot）获取视觉内容
+- **页面操作**：点击、输入、选择、拖拽等
+- **多标签页管理**：打开、切换、关闭标签页
+- **Chrome Extension Relay**：接管你现有的 Chrome 浏览器标签页
+
+## 启动和管理浏览器
+
+### 基本操作
+
+Agent 可以通过以下方式管理浏览器：
+
+```
+# 查看浏览器状态
+browser: status
+
+# 启动浏览器（使用内置的 openclaw profile）
+browser: start, profile="openclaw"
+
+# 停止浏览器
+browser: stop
+```
+
+在实际对话中，你只需要用自然语言：
+
+```
+你：帮我打开百度，搜索今天的新闻
+AI：我来帮你操作。
+
+（Agent 内部流程）
+1. browser start → 启动浏览器
+2. browser open url="https://www.baidu.com" → 打开百度
+3. browser snapshot → 获取页面结构
+4. browser act: type "今天的新闻" in search box → 输入搜索词
+5. browser act: click search button → 点击搜索
+6. browser snapshot → 获取结果
+```
+
+### 浏览器 Profile
+
+OpenClaw 支持两种浏览器 profile：
+
+| Profile | 说明 | 适用场景 |
+|---------|------|---------|
+| `openclaw` | 隔离的无头浏览器 | 自动化任务、后台抓取 |
+| `chrome` | 通过 Extension Relay 接管已有 Chrome | 需要登录态、操作真实浏览器 |
+
+## 页面操作详解
+
+### Snapshot —— 页面快照
+
+Snapshot 是 browser 工具最核心的功能。它将网页的 DOM 结构转化为 Agent 可理解的无障碍树（Accessibility Tree），让 AI 「看懂」页面上有什么元素。
+
+```
+browser: snapshot
+```
+
+返回结果类似：
+
+```
+[page] https://example.com
+  [heading] "Welcome to Example"
+  [textbox, ref="e12"] "Search..."
+  [button, ref="e13"] "Search"
+  [link, ref="e14"] "About Us"
+  [list]
+    [listitem] "Item 1"
+    [listitem] "Item 2"
+```
+
+Agent 通过 `ref` 标识来操作具体元素。
+
+### Screenshot —— 页面截图
+
+当需要「视觉」信息时（如验证码、图表、页面布局），使用截图：
+
+```
+browser: screenshot
+browser: screenshot, fullPage=true    # 全页面截图
+```
+
+### Act —— 页面操作
+
+通过 `act` 执行各种交互操作：
+
+**点击元素：**
+```
+browser: act, kind="click", ref="e13"
+```
+
+**输入文本：**
+```
+browser: act, kind="type", ref="e12", text="搜索内容"
+```
+
+**填充表单字段（清空后输入）：**
+```
+browser: act, kind="fill", ref="e12", text="新内容"
+```
+
+**按键：**
+```
+browser: act, kind="press", key="Enter"
+browser: act, kind="press", key="Control+a"
+```
+
+**选择下拉框：**
+```
+browser: act, kind="select", ref="e20", values=["option1"]
+```
+
+**悬停：**
+```
+browser: act, kind="hover", ref="e15"
+```
+
+**拖拽：**
+```
+browser: act, kind="drag", startRef="e10", endRef="e20"
+```
+
+## 实战案例
+
+### 案例1：自动填写表单
+
+假设你需要在某个网站填写重复性的申请表：
+
+```
+你：帮我在 example.com/apply 填写申请表。
+    姓名：张三
+    邮箱：zhangsan@email.com
+    电话：13800138000
+    选择部门：技术部
+```
+
+Agent 的执行流程：
+
+```
+1. browser: open url="https://example.com/apply"
+2. browser: snapshot
+   → 识别出表单字段：
+     [textbox, ref="e5"] "姓名"
+     [textbox, ref="e6"] "邮箱"
+     [textbox, ref="e7"] "电话"
+     [combobox, ref="e8"] "部门"
+     [button, ref="e9"] "提交"
+
+3. browser: act, kind="fill", ref="e5", text="张三"
+4. browser: act, kind="fill", ref="e6", text="zhangsan@email.com"
+5. browser: act, kind="fill", ref="e7", text="13800138000"
+6. browser: act, kind="select", ref="e8", values=["技术部"]
+7. browser: snapshot  → 确认填写正确
+8. browser: act, kind="click", ref="e9"  → 提交
+9. browser: snapshot  → 确认提交成功
+```
+
+### 案例2：抓取网页信息
+
+从网页提取结构化信息：
+
+```
+你：帮我查看 GitHub trending，列出今天最热门的5个项目
+```
+
+Agent 执行：
+
+```
+1. browser: open url="https://github.com/trending"
+2. browser: snapshot
+   → 解析页面中的项目列表
+3. 整理返回：
+   1. project-a ⭐ 1,234 - 项目描述...
+   2. project-b ⭐ 987 - 项目描述...
+   ...
+```
+
+### 案例3：自动化网页操作流程
+
+多步骤操作链：
+
+```
+你：帮我在 Hacker News 上查看首页，找到关于 AI 的帖子，
+    截图给我看看有哪些。
+```
+
+```
+1. browser: navigate url="https://news.ycombinator.com"
+2. browser: snapshot → 获取文章列表
+3. 筛选标题中包含 "AI" 的文章
+4. browser: screenshot → 截图发送给用户
+5. 整理文字摘要
+```
+
+### 案例4：使用 JavaScript 高级操作
+
+对于复杂场景，可以直接执行 JavaScript：
+
+```
+browser: act, kind="evaluate", fn="() => {
+  // 提取所有链接
+  return Array.from(document.querySelectorAll('a'))
+    .map(a => ({text: a.textContent, href: a.href}))
+    .filter(a => a.href.includes('github.com'))
+}"
+```
+
+## Chrome Extension Relay
+
+Chrome Extension Relay 是 OpenClaw 的一个强大特性：它可以让 AI 操作你**已经打开并登录的** Chrome 浏览器标签页。
+
+### 为什么需要 Relay？
+
+- 很多网站需要登录才能操作（邮箱、社交媒体、后台管理）
+- 在无头浏览器中重新登录很麻烦，还可能触发安全验证
+- Relay 直接利用你现有的登录状态
+
+### 使用方式
+
+1. **安装 Chrome 扩展**：安装 OpenClaw Browser Relay 扩展
+2. **连接标签页**：在目标标签页上点击扩展图标，Badge 显示 ON
+3. **Agent 操作**：使用 `profile="chrome"` 操作该标签页
+
+```
+# 使用 Chrome Relay 操作已登录的页面
+browser: snapshot, profile="chrome"
+browser: act, kind="click", ref="e5", profile="chrome"
+```
+
+### 典型场景
+
+```
+你：帮我看看 Gmail 里有没有未读邮件
+（你已经在 Chrome 中打开并登录了 Gmail，并点击了 Relay 扩展图标）
+
+Agent：
+1. browser: snapshot, profile="chrome"
+   → 读取 Gmail 页面结构
+2. 识别未读邮件列表
+3. 汇总返回给你
+```
+
+## 注意事项
+
+### 性能与等待
+
+- Snapshot 通常很快（< 1秒），但复杂页面可能需要等待加载
+- 对于 SPA（单页应用），操作后可能需要等待 DOM 更新再 snapshot
+- 避免频繁使用 `screenshot`（比 snapshot 消耗更多 token）
+
+### 安全考虑
+
+- 浏览器操作在沙箱中执行（如果启用了沙箱模式）
+- Chrome Relay 需要用户主动点击扩展图标授权
+- Agent 无法主动安装浏览器扩展或修改浏览器设置
+- 敏感操作（如支付、删除数据）建议 Agent 先确认再执行
+
+### 最佳实践
+
+1. **先 snapshot 再操作**：每次操作前获取页面状态，确保元素存在
+2. **操作后验证**：关键操作后再次 snapshot，确认结果
+3. **使用 ref 定位**：优先使用 snapshot 返回的 ref，比 CSS 选择器更稳定
+4. **保持 targetId**：在同一标签页操作时传递 `targetId`，避免切换到其他标签
+5. **优先 snapshot 而非 screenshot**：文本信息用 snapshot（省 token），视觉信息才用 screenshot
+
+### 常见问题
+
+**Q: 页面加载不完全怎么办？**
+
+可以在导航后等待一下：
+
+```
+browser: navigate url="https://example.com"
+browser: act, kind="wait", timeMs=3000     # 等待3秒
+browser: snapshot
+```
+
+**Q: 找不到目标元素？**
+
+- 检查元素是否在 iframe 中（需要指定 `frame` 参数）
+- 页面可能需要滚动才能看到元素
+- 尝试使用 `screenshot` 直观查看页面状态
+
+**Q: 如何处理弹窗/对话框？**
+
+```
+browser: dialog, accept=true              # 接受弹窗
+browser: dialog, accept=false             # 取消弹窗
+browser: dialog, accept=true, promptText="输入内容"  # 填写并确认
+```
 
 ---
 
-{/* TODO: Giscus */}
+> 💬 **有问题或建议？** 欢迎在下方评论区留言讨论。

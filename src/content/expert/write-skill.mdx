@@ -1,14 +1,475 @@
 ---
 title: "从零开发一个 OpenClaw Skill"
-description: 敬请期待
+description: "手把手教你创建、测试和发布一个 OpenClaw Skill，以天气查询为完整示例"
 ---
 
 # 从零开发一个 OpenClaw Skill
 
-> 🚧 本文正在撰写中，敬请期待...
+Skill 是 OpenClaw 的能力扩展单元。通过安装 Skill，你的 Agent 可以获得新的工具和能力 —— 比如查天气、控制智能家居、调用特定 API。本文以一个「天气查询 Skill」为例，手把手教你从零开发到发布。
 
-本文将介绍 OpenClaw 的专家级用法。
+## Skill 概念
+
+Skill 本质上是一个包含配置文件和可选脚本的目录。安装到 Agent 工作空间后，Agent 就能理解并使用该 Skill 提供的工具。
+
+**Skill 的组成：**
+
+- `SKILL.md` —— Skill 的核心定义文件，包含描述和使用说明
+- `metadata.openclaw` —— 元数据配置（依赖、安装脚本等）
+- 可选的脚本、配置文件、模板等
+
+## Skill 目录结构
+
+一个标准的 Skill 目录结构如下：
+
+```
+weather-skill/
+├── SKILL.md              # Skill 定义（必须）
+├── metadata.openclaw     # 元数据配置（必须）
+├── scripts/
+│   ├── get_weather.py    # 业务逻辑脚本
+│   └── requirements.txt  # Python 依赖
+├── templates/
+│   └── weather_report.md # 输出模板
+└── README.md             # 说明文档（可选）
+```
+
+## SKILL.md —— Skill 定义文件
+
+`SKILL.md` 是 Skill 最核心的文件。它使用 frontmatter + Markdown 格式，既定义元信息，又包含 Agent 使用说明。
+
+### Frontmatter 格式
+
+```markdown
+---
+name: weather
+displayName: 天气查询
+version: 1.0.0
+description: 查询全球城市天气预报，支持当前天气和未来 7 天预报
+author: your-name
+license: MIT
+tags:
+  - weather
+  - utility
+  - api
+requires:
+  env:
+    - OPENWEATHER_API_KEY    # 需要的环境变量
+  tools:
+    - exec                    # 需要的 OpenClaw 工具
+  commands:
+    - python3                 # 需要的系统命令
+---
+```
+
+**Frontmatter 字段说明：**
+
+| 字段 | 必填 | 说明 |
+|------|------|------|
+| `name` | ✅ | Skill 唯一标识，小写字母和连字符 |
+| `displayName` | ❌ | 展示名称 |
+| `version` | ✅ | 语义化版本号 |
+| `description` | ✅ | 简短描述 |
+| `author` | ❌ | 作者名 |
+| `tags` | ❌ | 标签，用于搜索和分类 |
+| `requires.env` | ❌ | 需要的环境变量 |
+| `requires.tools` | ❌ | 需要的 OpenClaw 工具权限 |
+| `requires.commands` | ❌ | 需要的系统命令 |
+
+### Markdown 内容
+
+Frontmatter 之后的 Markdown 内容是给 Agent 看的使用说明。Agent 会阅读这些内容来理解如何使用该 Skill：
+
+```markdown
+# 天气查询 Skill
+
+## 功能
+- 查询全球任意城市的当前天气
+- 获取未来 7 天天气预报
+- 支持中英文城市名
+
+## 使用方式
+
+### 查询当前天气
+运行脚本获取天气数据：
+\`\`\`bash
+python3 ~/.openclaw/skills/weather/scripts/get_weather.py --city "上海" --type current
+\`\`\`
+
+### 查询天气预报
+\`\`\`bash
+python3 ~/.openclaw/skills/weather/scripts/get_weather.py --city "Beijing" --type forecast --days 7
+\`\`\`
+
+## 输出格式
+脚本输出 JSON 格式的天气数据，请解析后以友好的格式呈现给用户。
+
+## 注意事项
+- 需要设置 OPENWEATHER_API_KEY 环境变量
+- 城市名支持中文，但建议使用英文以提高准确度
+- API 免费套餐每分钟限制 60 次调用
+```
+
+## metadata.openclaw 配置
+
+`metadata.openclaw` 是 YAML 格式的元数据文件，定义安装和运行时行为：
+
+```yaml
+# metadata.openclaw
+
+# Skill 标识
+name: weather
+version: 1.0.0
+
+# 运行环境
+primaryEnv: python       # 主要编程语言/环境
+
+# 安装步骤
+install:
+  - command: pip3 install -r scripts/requirements.txt
+    cwd: "${SKILL_DIR}"
+
+# 依赖声明
+requires:
+  env:
+    - name: OPENWEATHER_API_KEY
+      description: "OpenWeatherMap API 密钥"
+      required: true
+  system:
+    - python3
+    - pip3
+  tools:
+    - exec
+
+# 健康检查（安装后验证）
+healthCheck:
+  command: python3 scripts/get_weather.py --check
+  cwd: "${SKILL_DIR}"
+```
+
+**字段详解：**
+
+| 字段 | 说明 |
+|------|------|
+| `primaryEnv` | 主要运行环境：`python`, `node`, `shell`, `rust` 等 |
+| `install` | 安装时执行的命令列表 |
+| `install[].command` | 要执行的命令 |
+| `install[].cwd` | 工作目录，`${SKILL_DIR}` 指向 Skill 安装目录 |
+| `requires.env` | 需要的环境变量及说明 |
+| `requires.system` | 需要的系统级命令 |
+| `requires.tools` | 需要的 OpenClaw 工具权限 |
+| `healthCheck` | 安装后的健康检查命令 |
+
+## 完整示例：天气查询 Skill
+
+### 1. 创建项目结构
+
+```bash
+mkdir -p weather-skill/scripts
+cd weather-skill
+```
+
+### 2. 编写天气查询脚本
+
+```python
+#!/usr/bin/env python3
+"""
+weather-skill/scripts/get_weather.py
+天气查询脚本 - 使用 OpenWeatherMap API
+"""
+
+import argparse
+import json
+import os
+import sys
+import urllib.request
+import urllib.parse
+
+API_KEY = os.environ.get("OPENWEATHER_API_KEY")
+BASE_URL = "https://api.openweathermap.org/data/2.5"
+
+def get_current_weather(city: str) -> dict:
+    """获取当前天气"""
+    params = urllib.parse.urlencode({
+        "q": city,
+        "appid": API_KEY,
+        "units": "metric",
+        "lang": "zh_cn"
+    })
+    url = f"{BASE_URL}/weather?{params}"
+
+    with urllib.request.urlopen(url) as response:
+        data = json.loads(response.read())
+
+    return {
+        "city": data["name"],
+        "country": data["sys"]["country"],
+        "temperature": data["main"]["temp"],
+        "feels_like": data["main"]["feels_like"],
+        "humidity": data["main"]["humidity"],
+        "description": data["weather"][0]["description"],
+        "wind_speed": data["wind"]["speed"],
+        "icon": data["weather"][0]["icon"]
+    }
+
+def get_forecast(city: str, days: int = 7) -> dict:
+    """获取天气预报"""
+    params = urllib.parse.urlencode({
+        "q": city,
+        "appid": API_KEY,
+        "units": "metric",
+        "lang": "zh_cn",
+        "cnt": min(days * 8, 40)  # API 每3小时一个数据点
+    })
+    url = f"{BASE_URL}/forecast?{params}"
+
+    with urllib.request.urlopen(url) as response:
+        data = json.loads(response.read())
+
+    forecasts = []
+    seen_dates = set()
+    for item in data["list"]:
+        date = item["dt_txt"].split(" ")[0]
+        if date not in seen_dates:
+            seen_dates.add(date)
+            forecasts.append({
+                "date": date,
+                "temp_max": item["main"]["temp_max"],
+                "temp_min": item["main"]["temp_min"],
+                "description": item["weather"][0]["description"],
+                "humidity": item["main"]["humidity"]
+            })
+
+    return {
+        "city": data["city"]["name"],
+        "country": data["city"]["country"],
+        "forecasts": forecasts[:days]
+    }
+
+def health_check() -> bool:
+    """检查 API Key 是否有效"""
+    if not API_KEY:
+        print("ERROR: OPENWEATHER_API_KEY not set", file=sys.stderr)
+        return False
+    try:
+        get_current_weather("London")
+        print("OK: API Key is valid")
+        return True
+    except Exception as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        return False
+
+def main():
+    parser = argparse.ArgumentParser(description="天气查询工具")
+    parser.add_argument("--city", type=str, help="城市名称")
+    parser.add_argument("--type", choices=["current", "forecast"], default="current")
+    parser.add_argument("--days", type=int, default=7, help="预报天数")
+    parser.add_argument("--check", action="store_true", help="健康检查")
+
+    args = parser.parse_args()
+
+    if args.check:
+        sys.exit(0 if health_check() else 1)
+
+    if not args.city:
+        print("ERROR: --city is required", file=sys.stderr)
+        sys.exit(1)
+
+    if not API_KEY:
+        print("ERROR: OPENWEATHER_API_KEY environment variable is not set", file=sys.stderr)
+        sys.exit(1)
+
+    try:
+        if args.type == "current":
+            result = get_current_weather(args.city)
+        else:
+            result = get_forecast(args.city, args.days)
+
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+    except Exception as e:
+        print(json.dumps({"error": str(e)}, ensure_ascii=False), file=sys.stderr)
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
+```
+
+### 3. 创建依赖文件
+
+```text
+# weather-skill/scripts/requirements.txt
+# 本示例只使用标准库，无额外依赖
+# 如果需要更丰富的功能，可以添加：
+# requests>=2.28.0
+# python-dateutil>=2.8.0
+```
+
+### 4. 编写 SKILL.md
+
+```markdown
+---
+name: weather
+displayName: 天气查询
+version: 1.0.0
+description: 查询全球城市天气预报
+author: your-name
+tags:
+  - weather
+  - utility
+requires:
+  env:
+    - OPENWEATHER_API_KEY
+  commands:
+    - python3
+---
+
+# 天气查询 Skill
+
+查询全球城市的实时天气和天气预报。
+
+## 使用方式
+
+### 查询当前天气
+\`\`\`bash
+python3 ~/.openclaw/skills/weather/scripts/get_weather.py --city "Shanghai" --type current
+\`\`\`
+
+### 查询天气预报
+\`\`\`bash
+python3 ~/.openclaw/skills/weather/scripts/get_weather.py --city "Shanghai" --type forecast --days 5
+\`\`\`
+
+## 输出示例
+
+当前天气返回 JSON：
+\`\`\`json
+{
+  "city": "Shanghai",
+  "temperature": 22.5,
+  "description": "多云",
+  "humidity": 65
+}
+\`\`\`
+
+请将 JSON 数据转化为用户友好的格式，添加天气 emoji。
+```
+
+### 5. 编写 metadata.openclaw
+
+```yaml
+name: weather
+version: 1.0.0
+primaryEnv: python
+install:
+  - command: pip3 install -r scripts/requirements.txt
+    cwd: "${SKILL_DIR}"
+requires:
+  env:
+    - name: OPENWEATHER_API_KEY
+      description: "OpenWeatherMap API Key (https://openweathermap.org/api)"
+      required: true
+  system:
+    - python3
+healthCheck:
+  command: python3 scripts/get_weather.py --check
+  cwd: "${SKILL_DIR}"
+```
+
+## 测试和调试
+
+### 本地测试
+
+```bash
+# 设置环境变量
+export OPENWEATHER_API_KEY="your-api-key-here"
+
+# 测试当前天气
+python3 scripts/get_weather.py --city "Shanghai" --type current
+
+# 测试预报
+python3 scripts/get_weather.py --city "Beijing" --type forecast --days 3
+
+# 运行健康检查
+python3 scripts/get_weather.py --check
+```
+
+### 安装到本地 Agent 测试
+
+```bash
+# 手动安装（复制到 skills 目录）
+cp -r weather-skill ~/.openclaw/skills/weather
+
+# 或使用 openclaw CLI 安装本地 Skill
+openclaw skill install ./weather-skill
+
+# 验证安装
+openclaw skill list
+```
+
+安装后，重启 Agent 或开启新会话，Agent 就能使用天气查询功能了。
+
+### 调试技巧
+
+1. **查看 Agent 是否识别 Skill**：在对话中问「你有哪些 Skill？」
+2. **检查脚本输出**：手动运行脚本确认输出格式正确
+3. **查看错误日志**：`docker compose logs -f | grep "weather"`
+4. **环境变量检查**：确保 `.env` 中设置了必需的 API Key
+
+## 发布到 ClawdHub
+
+[ClawdHub](https://hub.openclaw.com) 是 OpenClaw 的 Skill 商店。开发完成后，你可以将 Skill 发布供所有人使用。
+
+### 发布步骤
+
+```bash
+# 1. 登录 ClawdHub
+openclaw auth login
+
+# 2. 验证 Skill 格式
+openclaw skill validate ./weather-skill
+
+# 输出：
+# ✅ SKILL.md: valid
+# ✅ metadata.openclaw: valid
+# ✅ Health check: passed
+# ✅ Ready to publish
+
+# 3. 发布
+openclaw skill publish ./weather-skill
+
+# 输出：
+# 📦 Publishing weather@1.0.0...
+# ✅ Published successfully!
+# 🔗 https://hub.openclaw.com/skills/weather
+```
+
+### 版本更新
+
+```bash
+# 修改 SKILL.md 和 metadata.openclaw 中的 version
+# 然后重新发布
+openclaw skill publish ./weather-skill
+
+# 也支持指定版本
+openclaw skill publish ./weather-skill --version 1.1.0
+```
+
+### 发布注意事项
+
+- **命名唯一性**：Skill 名称在 ClawdHub 上是全局唯一的
+- **API Key 安全**：不要在 Skill 中硬编码 API Key，使用环境变量
+- **README 完善**：好的文档能让更多人使用你的 Skill
+- **测试覆盖**：发布前确保在干净环境中测试安装和使用流程
+- **许可协议**：建议使用 MIT 或 Apache 2.0 开源许可
+
+## Skill 开发最佳实践
+
+1. **单一职责**：一个 Skill 专注一个领域（天气、邮件、日历等）
+2. **优雅降级**：API Key 缺失时给出清晰的错误提示
+3. **输出格式统一**：使用 JSON 输出，便于 Agent 解析
+4. **文档完善**：SKILL.md 中的说明越清晰，Agent 使用越准确
+5. **版本管理**：使用 git 管理 Skill 代码，语义化版本号
+6. **最小依赖**：尽量使用标准库，减少安装步骤
 
 ---
 
-{/* TODO: Giscus */}
+> 💬 **有问题或建议？** 欢迎在下方评论区留言讨论。

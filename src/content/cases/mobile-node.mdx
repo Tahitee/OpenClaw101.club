@@ -1,14 +1,315 @@
 ---
 title: "手机远程控制：iOS / Android Node 实战"
-description: 敬请期待
+description: "通过 OpenClaw Node 配对手机设备，实现远程拍照、屏幕录制、位置获取、Canvas 画布等功能"
 ---
 
 # 手机远程控制：iOS / Android Node 实战
 
-> 🚧 本文正在撰写中，敬请期待...
+OpenClaw 的 Node 系统让你的 AI 助手拥有「物理触角」—— 通过配对手机设备，Agent 可以远程控制摄像头拍照、获取位置、录制屏幕，甚至在手机上展示 Canvas 画布。本文详细介绍 Node 的配对过程和使用方式。
 
-本文将通过实战案例介绍 OpenClaw 的高级用法。
+## Node 概念
+
+**Node（节点）** 是 OpenClaw 中的 companion device（伴侣设备）概念。任何安装了 OpenClaw 客户端应用的设备都可以作为 Node 连接到 Gateway，成为 Agent 的「感官延伸」。
+
+Node 可以是：
+- 你的 iPhone 或 Android 手机
+- 一台平板电脑
+- 任何运行 OpenClaw 客户端的设备
+
+**Node 能做什么？**
+
+| 能力 | 说明 |
+|------|------|
+| 📷 摄像头 | 前后摄像头拍照、录制视频片段 |
+| 📱 屏幕录制 | 录制设备屏幕内容 |
+| 📍 位置获取 | 获取设备 GPS 位置 |
+| 🖼️ Canvas 画布 | 在设备上展示自定义 HTML 内容 |
+| 📢 通知推送 | 向设备发送系统通知 |
+| 💻 远程命令 | 在设备上执行命令（如支持） |
+
+## 设备配对
+
+### 步骤1：安装客户端应用
+
+- **iOS**：在 App Store 搜索「OpenClaw」并安装
+- **Android**：在 Google Play 搜索「OpenClaw」或从 GitHub Release 下载 APK
+
+### 步骤2：发起配对
+
+在手机应用中：
+
+1. 打开 OpenClaw 应用
+2. 点击「连接服务器」或「Pair with Gateway」
+3. 输入 Gateway 地址：`https://your-server:4100` 或扫描二维码
+4. 应用会生成一个配对请求
+
+### 步骤3：在 Gateway 端批准
+
+Agent 或管理员需要批准配对请求：
+
+```bash
+# 查看待配对设备
+openclaw nodes pending
+
+# 输出示例：
+# ID: abc123
+# Name: iPhone-XiaoMing
+# Platform: iOS 18.1
+# Status: pending
+
+# 批准配对
+openclaw nodes approve --id abc123
+
+# 或拒绝
+openclaw nodes reject --id abc123
+```
+
+也可以通过对话让 Agent 处理：
+
+```
+你：检查一下有没有设备等待配对
+AI：发现一个待配对设备：
+    - 名称：iPhone-XiaoMing
+    - 平台：iOS 18.1
+    需要批准吗？
+
+你：批准
+AI：已批准配对。设备 iPhone-XiaoMing 现在已连接。
+```
+
+### 步骤4：确认连接
+
+```bash
+# 查看已连接的 Node
+openclaw nodes status
+
+# 输出：
+# Nodes:
+#   - id: abc123
+#     name: iPhone-XiaoMing
+#     platform: iOS 18.1
+#     status: online
+#     lastSeen: 2025-01-15T08:30:00Z
+```
+
+## 摄像头控制
+
+### 拍照
+
+Agent 可以使用前置或后置摄像头拍照：
+
+```
+你：帮我用后置摄像头拍一张照片
+AI：（调用 nodes: camera_snap, facing="back"）
+    已拍摄。这是照片：[图片]
+```
+
+**参数说明：**
+
+```yaml
+nodes: camera_snap
+  node: "abc123"          # 设备 ID（可选，默认使用第一个在线设备）
+  facing: "back"          # back=后置, front=前置, both=前后同时拍
+  quality: 80             # 图片质量 (1-100)
+  maxWidth: 1920          # 最大宽度（像素）
+```
+
+### 录制视频片段
+
+```
+你：录制一段10秒的视频
+AI：（调用 nodes: camera_clip, duration="10s", facing="back"）
+    已录制完成。
+```
+
+```yaml
+nodes: camera_clip
+  node: "abc123"
+  facing: "back"           # front 或 back
+  durationMs: 10000        # 录制时长（毫秒）
+  fps: 30                  # 帧率
+  includeAudio: true       # 是否包含音频
+```
+
+### 实际应用场景
+
+- **远程查看家里情况**：把旧手机放在家里当监控，随时让 AI 拍照看看
+- **宠物监控**：「帮我看看猫在干嘛」
+- **安全检查**：远程查看门口/车库
+
+## 屏幕录制
+
+录制设备屏幕内容：
+
+```yaml
+nodes: screen_record
+  node: "abc123"
+  durationMs: 5000         # 录制5秒
+  screenIndex: 0           # 屏幕索引（通常为0）
+```
+
+> ⚠️ **注意**：屏幕录制需要设备端授权，iOS 可能会显示确认弹窗。首次使用需要在设备上手动同意。
+
+## 位置获取
+
+获取设备的 GPS 位置：
+
+```
+你：我手机在哪里？
+AI：（调用 nodes: location_get）
+    你的 iPhone 当前位置：
+    📍 上海市浦东新区世纪大道 1000 号
+    经纬度：31.2354, 121.5250
+    精度：±10 米
+    更新时间：2 分钟前
+```
+
+```yaml
+nodes: location_get
+  node: "abc123"
+  desiredAccuracy: "precise"    # coarse=粗略, balanced=平衡, precise=精确
+  maxAgeMs: 60000               # 允许缓存位置的最大时间
+  locationTimeoutMs: 10000      # 获取位置超时
+```
+
+**精度级别：**
+
+| 级别 | 精度 | 耗电 | 适用场景 |
+|------|------|------|---------|
+| `coarse` | ~1 km | 低 | 城市级别定位 |
+| `balanced` | ~100 m | 中 | 街道级别定位 |
+| `precise` | ~10 m | 高 | 精确导航定位 |
+
+## Canvas 画布
+
+Canvas 是 OpenClaw 的一个独特功能 —— 可以在手机设备上展示自定义 HTML 内容。你可以把手机变成一个信息展示板。
+
+### 展示 HTML 内容
+
+```yaml
+canvas: present
+  node: "abc123"
+  url: "https://your-dashboard.com"
+```
+
+### 推送动态内容（A2UI）
+
+Agent 可以生成 HTML 并推送到设备：
+
+```yaml
+canvas: a2ui_push
+  node: "abc123"
+  jsonl: '{"type":"html","content":"<h1>今日天气</h1><p>☀️ 晴 25°C</p>"}'
+```
+
+### 应用场景
+
+- **数字相框**：展示家庭照片轮播
+- **仪表盘**：实时显示服务器状态、股票行情
+- **提示板**：在厨房展示今天的菜谱
+- **倒计时**：展示重要事件倒计时
+
+## 通知推送
+
+向设备发送系统通知：
+
+```yaml
+nodes: notify
+  node: "abc123"
+  title: "会议提醒"
+  body: "10分钟后有产品评审会议"
+  priority: "timeSensitive"       # passive, active, timeSensitive
+  sound: "default"
+```
+
+**优先级说明：**
+
+| 优先级 | 行为 |
+|--------|------|
+| `passive` | 静默通知，不打断用户 |
+| `active` | 正常通知，有声音提示 |
+| `timeSensitive` | 紧急通知，穿透勿扰模式 |
+
+## 远程命令执行
+
+在支持的设备上执行命令：
+
+```yaml
+nodes: run
+  node: "abc123"
+  command: ["ls", "-la", "/tmp"]
+  cwd: "/tmp"
+  commandTimeoutMs: 30000
+```
+
+> ⚠️ 命令执行能力取决于设备平台和权限。iOS 上此功能较为受限，Android 可能需要 root 权限。
+
+## 配置与安全
+
+### 安全最佳实践
+
+1. **只配对信任的设备**：审慎批准配对请求
+2. **及时移除离线设备**：定期清理不再使用的 Node
+3. **最小权限原则**：只启用需要的能力（摄像头、位置等）
+4. **网络安全**：确保 Gateway 和 Node 之间通过加密通道通信
+
+### 网络配置
+
+Node 需要能够访问 Gateway 的地址。如果 Gateway 在内网：
+
+```bash
+# 方案1：使用 SSH 隧道
+ssh -R 4100:localhost:4100 your-vps-ip
+
+# 方案2：使用 Cloudflare Tunnel
+cloudflared tunnel --url http://localhost:4100
+
+# 方案3：使用 Tailscale 组网
+# 在 Gateway 和 Node 设备上都安装 Tailscale
+# 使用 Tailscale 内网 IP 连接
+```
+
+### 电量管理
+
+手机 Node 长时间运行会消耗电池：
+
+- **iOS**：后台运行有限制，建议保持应用在前台或配置后台刷新
+- **Android**：关闭电池优化以防止应用被杀
+- **建议**：如果用旧手机当固定 Node，保持充电状态
+
+### 设备管理命令
+
+```bash
+# 查看所有 Node 状态
+openclaw nodes status
+
+# 查看设备详细信息
+openclaw nodes describe --node abc123
+
+# 移除设备
+openclaw nodes remove --node abc123
+```
+
+## 完整示例：智能家庭监控
+
+结合以上功能，实现一个简单的「智能家庭监控」场景：
+
+```
+你：帮我设置一个简单的家庭监控方案
+
+AI：好的，基于你已配对的旧手机 Node，我建议以下方案：
+
+1. 📷 每小时自动拍一张照片存档
+2. 🔔 检测到异常（比如你不在家时有人进出）发送通知
+3. 📊 在手机 Canvas 上展示状态面板
+
+我已创建定时任务：
+- 每小时拍照：cron "0 * * * *"
+- 实时状态面板已推送到设备 Canvas
+
+需要调整吗？
+```
 
 ---
 
-{/* TODO: Giscus */}
+> 💬 **有问题或建议？** 欢迎在下方评论区留言讨论。

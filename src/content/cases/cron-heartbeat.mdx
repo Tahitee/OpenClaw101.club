@@ -1,14 +1,354 @@
 ---
 title: "定时任务与提醒：Cron + Heartbeat 自动化"
-description: 敬请期待
+description: "使用 OpenClaw 的 Cron 系统和 Heartbeat 心跳机制，实现定时任务、主动提醒和自动化工作流"
 ---
 
 # 定时任务与提醒：Cron + Heartbeat 自动化
 
-> 🚧 本文正在撰写中，敬请期待...
+OpenClaw 不只是一个被动回答问题的 AI —— 通过 Cron 定时任务和 Heartbeat 心跳机制，它可以主动执行任务、发送提醒、检查状态。这篇文章介绍如何让你的 AI 助手变得「主动」。
 
-本文将通过实战案例介绍 OpenClaw 的高级用法。
+## Cron 系统介绍
+
+OpenClaw 内置了一套灵活的 Cron 系统，支持三种调度类型：
+
+### 调度类型
+
+**1. `at` —— 一次性定时任务**
+
+在指定时间点执行一次，执行后自动删除。适合「20分钟后提醒我」这类场景。
+
+```yaml
+schedule:
+  type: at
+  time: "2025-01-15T09:00:00Z"    # ISO 8601 格式
+```
+
+**2. `every` —— 间隔重复任务**
+
+按固定时间间隔重复执行。
+
+```yaml
+schedule:
+  type: every
+  interval: 30m      # 每30分钟
+  # 支持的单位：s（秒）、m（分）、h（小时）、d（天）
+```
+
+**3. `cron` —— Cron 表达式**
+
+使用标准的 cron 表达式，适合复杂的定时规则。
+
+```yaml
+schedule:
+  type: cron
+  expression: "0 9 * * 1-5"    # 工作日每天早上9点
+```
+
+常用 cron 表达式速查：
+
+| 表达式 | 含义 |
+|--------|------|
+| `0 9 * * *` | 每天早上 9:00 |
+| `0 9 * * 1-5` | 工作日早上 9:00 |
+| `*/30 * * * *` | 每 30 分钟 |
+| `0 0 1 * *` | 每月 1 号零点 |
+| `0 8,20 * * *` | 每天 8:00 和 20:00 |
+
+### Payload 类型
+
+Cron 任务触发时，发送的 payload 有两种类型：
+
+**`systemEvent` —— 系统事件**
+
+向指定渠道发送一条系统消息，Agent 会在该渠道上下文中处理：
+
+```yaml
+payload:
+  type: systemEvent
+  channel: telegram
+  target: "123456789"          # 目标用户/群组 ID
+  message: "请检查今天的未读邮件并汇总"
+```
+
+**`agentTurn` —— Agent 内部执行**
+
+不通过任何渠道，直接在 Agent 的 session 中执行任务。适合后台作业：
+
+```yaml
+payload:
+  type: agentTurn
+  agent: main
+  prompt: "检查服务器健康状态，如果有异常通过 Telegram 通知我"
+```
+
+## 创建定时任务
+
+### 通过对话创建
+
+最直观的方式是直接告诉你的 AI 助手：
+
+```
+你：每天早上8点给我发一份天气预报
+AI：好的，我已创建定时任务。每天早上8:00 会通过当前渠道发送天气预报。
+```
+
+Agent 会调用内部 API 创建 cron 任务。
+
+### 通过配置文件创建
+
+在 `config.yaml` 中预定义 cron 任务：
+
+```yaml
+# config.yaml
+cron:
+  jobs:
+    morning-brief:
+      schedule:
+        type: cron
+        expression: "0 8 * * *"           # 每天早上8点
+      payload:
+        type: systemEvent
+        channel: telegram
+        target: "123456789"
+        message: |
+          早安！请为我整理今天的早报：
+          1. 查看未读邮件摘要
+          2. 今日日程提醒
+          3. 今日天气
+      agent: main
+      timezone: Asia/Shanghai
+
+    weekly-review:
+      schedule:
+        type: cron
+        expression: "0 20 * * 5"           # 每周五晚上8点
+      payload:
+        type: systemEvent
+        channel: whatsapp
+        target: "8613800138000@s.whatsapp.net"
+        message: "请帮我回顾本周的工作记忆，总结本周要点和下周计划"
+      agent: main
+      timezone: Asia/Shanghai
+
+    server-check:
+      schedule:
+        type: every
+        interval: 1h                        # 每小时
+      payload:
+        type: agentTurn
+        agent: main
+        prompt: "检查服务器状态，如果 CPU > 90% 或磁盘 > 85% 则通过 Telegram 通知我"
+```
+
+### 通过 CLI 创建
+
+```bash
+# 创建一次性提醒（20分钟后）
+openclaw cron create \
+  --schedule '{"type":"at","time":"2025-01-15T09:20:00Z"}' \
+  --payload '{"type":"systemEvent","channel":"telegram","target":"123456789","message":"会议开始了！"}' \
+  --agent main
+
+# 列出所有定时任务
+openclaw cron list
+
+# 删除任务
+openclaw cron delete morning-brief
+```
+
+## Heartbeat 心跳机制
+
+Heartbeat 是 OpenClaw 的另一个主动机制。它定期「唤醒」Agent，让 Agent 决定是否需要做些什么。
+
+### 工作原理
+
+1. Gateway 按配置的间隔（默认 30 分钟）向 Agent 发送心跳
+2. Agent 收到心跳后读取 `HEARTBEAT.md`，根据清单决定是否有工作要做
+3. 如果无事可做，Agent 回复 `HEARTBEAT_OK`
+4. 如果有事要做，Agent 执行任务并通过渠道发送消息
+
+### 配置 Heartbeat
+
+在 `config.yaml` 中配置心跳间隔：
+
+```yaml
+# config.yaml
+agents:
+  list:
+    main:
+      heartbeat:
+        enabled: true
+        interval: 30m            # 每30分钟触发一次
+        prompt: "Read HEARTBEAT.md if it exists (workspace context). Follow it strictly. Do not infer or repeat old tasks from prior chats. If nothing needs attention, reply HEARTBEAT_OK."
+```
+
+### HEARTBEAT.md 配置
+
+在 Agent 工作空间中创建 `HEARTBEAT.md`，定义心跳时要检查的事项：
+
+```markdown
+# HEARTBEAT.md - 心跳检查清单
+
+## 检查项目（轮流检查，不要每次都全做）
+
+### 邮件检查（每2-3次心跳做一次）
+- 检查未读邮件
+- 重要邮件通过 Telegram 通知
+
+### 日程提醒
+- 检查未来2小时内的日历事件
+- 有即将到来的会议则通过 WhatsApp 提醒
+
+### 天气预警
+- 如果未来几小时有雨，提醒带伞
+- 极端天气预警
+
+### 系统健康
+- 检查磁盘空间
+- 检查重要服务运行状态
+
+## 规则
+- 深夜（23:00-07:00）不要打扰，除非紧急
+- 每次只检查1-2项，轮流来
+- 在 memory/heartbeat-state.json 记录上次检查时间
+```
+
+### 心跳状态追踪
+
+Agent 可以在 `memory/heartbeat-state.json` 中记录检查状态：
+
+```json
+{
+  "lastChecks": {
+    "email": "2025-01-15T08:30:00Z",
+    "calendar": "2025-01-15T08:00:00Z",
+    "weather": "2025-01-15T07:00:00Z",
+    "system": "2025-01-14T20:00:00Z"
+  },
+  "lastNotification": "2025-01-15T08:30:00Z"
+}
+```
+
+这样 Agent 就能知道哪项检查「该轮到了」。
+
+## Heartbeat vs Cron：如何选择？
+
+| 特性 | Heartbeat | Cron |
+|------|-----------|------|
+| 触发方式 | 固定间隔唤醒 | 精确时间点触发 |
+| 灵活性 | Agent 自行决定做什么 | 预定义的固定任务 |
+| 上下文 | 有会话上下文 | 独立执行 |
+| 适用场景 | 巡检、轮询、弹性任务 | 精确定时、固定流程 |
+| Token 消耗 | 每次都消耗（即使无事可做） | 只在触发时消耗 |
+
+**最佳实践：**
+
+- 将多个轮询类检查合并到 `HEARTBEAT.md`，减少 API 调用
+- 精确定时（如"每周一早9点发周报"）用 Cron
+- 弹性检查（如"有空就看看邮箱"）用 Heartbeat
+
+## 实际案例
+
+### 案例1：每日早报
+
+```yaml
+# config.yaml
+cron:
+  jobs:
+    daily-brief:
+      schedule:
+        type: cron
+        expression: "30 7 * * *"
+      payload:
+        type: systemEvent
+        channel: whatsapp
+        target: "8613800138000@s.whatsapp.net"
+        message: |
+          早安！请为我准备今日早报：
+          1. 搜索今天的科技新闻头条（3-5条）
+          2. 查看今天的天气（上海）
+          3. 查看我今天的日历安排
+          4. 用简洁的格式整理，加上 emoji
+      agent: main
+      timezone: Asia/Shanghai
+```
+
+### 案例2：定时检查邮件
+
+```markdown
+<!-- HEARTBEAT.md 中添加 -->
+
+### 邮件监控（每次心跳都检查）
+- 使用邮件工具检查未读邮件
+- 如果有标记为重要的邮件，立刻通知
+- 普通邮件积累到3封以上再汇总通知
+- 记录在 memory/heartbeat-state.json
+```
+
+### 案例3：会议提醒
+
+```yaml
+cron:
+  jobs:
+    meeting-check:
+      schedule:
+        type: every
+        interval: 15m
+      payload:
+        type: agentTurn
+        agent: main
+        prompt: |
+          检查日历中未来30分钟内的会议。
+          如果有即将开始的会议：
+          1. 通过 Telegram 发送提醒，包含会议名称、时间、链接
+          2. 如果有会议文档，提前整理要点
+          如果没有会议，不做任何事。
+```
+
+### 案例4：服务器自愈
+
+```yaml
+cron:
+  jobs:
+    self-heal:
+      schedule:
+        type: every
+        interval: 5m
+      payload:
+        type: agentTurn
+        agent: main
+        prompt: |
+          检查以下服务状态：
+          - docker ps 查看容器是否正常
+          - curl localhost:8080/health 检查应用健康
+          如果有服务异常：
+          1. 尝试重启（docker restart）
+          2. 通过 Telegram 通知我处理结果
+          如果一切正常，不做任何事。
+```
+
+## 调试与排错
+
+```bash
+# 查看当前所有 cron 任务
+openclaw cron list
+
+# 查看 cron 执行日志
+docker compose logs -f | grep "cron"
+
+# 手动触发心跳测试
+openclaw heartbeat trigger --agent main
+
+# 查看心跳日志
+docker compose logs -f | grep "heartbeat"
+```
+
+**常见问题：**
+
+- **时区问题**：确保 `timezone` 设置正确，否则任务会在错误的时间触发
+- **Token 消耗**：Heartbeat 每次都消耗 token，间隔不宜太短（建议 ≥ 15分钟）
+- **重复通知**：在 HEARTBEAT.md 中明确规则，避免同一信息反复通知
 
 ---
 
-{/* TODO: Giscus */}
+> 💬 **有问题或建议？** 欢迎在下方评论区留言讨论。
