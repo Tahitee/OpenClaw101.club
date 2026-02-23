@@ -1,0 +1,10 @@
+{
+  "name": "openclaw101-club",
+  "compatibility_date": "2026-02-23",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "main": ".open-next/worker.js"
+}

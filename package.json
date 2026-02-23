@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "next",
     "build": "next build",
+    "build:cf": "next build && npx @opennextjs/cloudflare build",
     "postbuild": "node scripts/generate-sitemap.mjs",
     "start": "next start"
   },
