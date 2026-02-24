@@ -7,5 +7,11 @@ export default {
   cases: '💡 实战案例',
   expert: '🔧 专家进阶',
   videos: '🎬 视频教程',
-  faq: '❓ 常见问题'
+  faq: '❓ 常见问题',
+  assessment: {
+    title: '📋 企业风险评估',
+    theme: {
+      layout: 'full'
+    }
+  }
 }
