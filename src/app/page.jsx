@@ -92,11 +92,30 @@ export default function IndexPage() {
               ① <a href="/docs/channels/feishu">飞书</a> / <a href="/docs/channels/dingtalk">钉钉</a> / <a href="/docs/channels/wecom">企微</a> 接入<br/>
               ② <a href="/docs/advanced/security">安全加固指南</a><br/>
               ③ <a href="/docs/cases/multi-agent">多 Agent 架构</a><br/>
-              ④ <a href="/docs/expert/sandboxing">沙箱隔离部署</a>
+              ④ <a href="/docs/expert/sandboxing">沙箱隔离部署</a><br/>
+              ⭐ <a href="/assessment/"><strong>先做风险评估</strong></a>
             </div>
           </div>
 
         </div>
+      </div>
+
+      {/* Assessment Banner */}
+      <div className={styles.assessmentBanner}>
+        <span className={styles.assessmentBannerIcon}>📋</span>
+        <h2 className={styles.assessmentBannerTitle}>企业适合引入 OpenClaw 吗？</h2>
+        <p className={styles.assessmentBannerDesc}>
+          28 道专业评估题，5 分钟量化你的企业在安全、数据、运维、合规等维度的准备程度
+        </p>
+        <div className={styles.assessmentBannerTags}>
+          <span className={styles.assessmentTag}>🛡️ 安全风险</span>
+          <span className={styles.assessmentTag}>📊 数据合规</span>
+          <span className={styles.assessmentTag}>🔧 运维能力</span>
+          <span className={styles.assessmentTag}>⚖️ 决策建议</span>
+        </div>
+        <a href="/assessment/" className={styles.btnAssessment}>
+          开始免费评估 →
+        </a>
       </div>
 
       {/* Content Map */}

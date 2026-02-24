@@ -4,5 +4,34 @@ export const metadata = {
 }
 
 export default function AssessmentLayout({ children }) {
-  return children
+  return (
+    <div style={{ minHeight: '100vh' }}>
+      {/* Back to home nav */}
+      <nav style={{
+        padding: '12px 24px',
+        borderBottom: '1px solid #e5e7eb',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '16px',
+      }}>
+        <a href="/" style={{
+          fontWeight: 'bold',
+          fontSize: '1.1em',
+          textDecoration: 'none',
+          color: 'inherit',
+        }}>
+          🦞 OpenClaw101
+        </a>
+        <span style={{ color: '#999' }}>|</span>
+        <a href="/docs/getting-started/what-is-openclaw" style={{
+          fontSize: '0.9em',
+          textDecoration: 'none',
+          color: '#666',
+        }}>
+          📖 教程
+        </a>
+      </nav>
+      {children}
+    </div>
+  )
 }

@@ -10,8 +10,7 @@ export default {
   faq: '❓ 常见问题',
   assessment: {
     title: '📋 企业风险评估',
-    theme: {
-      layout: 'full'
-    }
+    type: 'page',
+    href: '/assessment/'
   }
 }
