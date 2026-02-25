@@ -76,7 +76,24 @@ export default async function RootLayout({ children }) {
         </span>
       }
       projectLink="https://github.com/Tahitee/OpenClaw101.club"
-    />
+    >
+      <a
+        href="/assessment/"
+        style={{
+          fontSize: '0.875rem',
+          fontWeight: 600,
+          color: '#dc2626',
+          textDecoration: 'none',
+          padding: '4px 12px',
+          borderRadius: '6px',
+          border: '1.5px solid #dc2626',
+          transition: 'all 0.2s',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        📋 企业风险评估
+      </a>
+    </Navbar>
   )
   const pageMap = await getPageMap()
   return (
@@ -88,6 +105,23 @@ export default async function RootLayout({ children }) {
           footer={
             <Footer>
               <div style={{ textAlign: 'center' }}>
+                <div style={{ marginBottom: '12px' }}>
+                  <a
+                    href="/assessment/"
+                    style={{
+                      display: 'inline-block',
+                      padding: '6px 16px',
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      color: '#dc2626',
+                      textDecoration: 'none',
+                      border: '1.5px solid #dc2626',
+                      borderRadius: '6px',
+                    }}
+                  >
+                    📋 企业引入风险评估 — 5 分钟测一测
+                  </a>
+                </div>
                 © {new Date().getFullYear()} OpenClaw101. 基于{' '}
                 <a href="https://nextra.site" target="_blank" rel="noopener noreferrer">
                   Nextra

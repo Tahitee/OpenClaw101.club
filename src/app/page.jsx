@@ -25,6 +25,24 @@ export default function IndexPage() {
         </div>
       </div>
 
+      {/* Assessment Banner - 首页醒目位置 */}
+      <div className={styles.assessmentBanner}>
+        <span className={styles.assessmentBannerIcon}>📋</span>
+        <h2 className={styles.assessmentBannerTitle}>企业适合引入 OpenClaw 吗？</h2>
+        <p className={styles.assessmentBannerDesc}>
+          28 道专业评估题，5 分钟量化你的企业在安全、数据、运维、合规等维度的准备程度
+        </p>
+        <div className={styles.assessmentBannerTags}>
+          <span className={styles.assessmentTag}>🛡️ 安全风险</span>
+          <span className={styles.assessmentTag}>📊 数据合规</span>
+          <span className={styles.assessmentTag}>🔧 运维能力</span>
+          <span className={styles.assessmentTag}>⚖️ 决策建议</span>
+        </div>
+        <a href="/assessment/" className={styles.btnAssessment}>
+          开始免费评估 →
+        </a>
+      </div>
+
       {/* Quick Start Banner */}
       <div className={styles.quickStart}>
         <h3 className={styles.quickStartTitle}>⚡ 三步搞定</h3>
@@ -98,24 +116,6 @@ export default function IndexPage() {
           </div>
 
         </div>
-      </div>
-
-      {/* Assessment Banner */}
-      <div className={styles.assessmentBanner}>
-        <span className={styles.assessmentBannerIcon}>📋</span>
-        <h2 className={styles.assessmentBannerTitle}>企业适合引入 OpenClaw 吗？</h2>
-        <p className={styles.assessmentBannerDesc}>
-          28 道专业评估题，5 分钟量化你的企业在安全、数据、运维、合规等维度的准备程度
-        </p>
-        <div className={styles.assessmentBannerTags}>
-          <span className={styles.assessmentTag}>🛡️ 安全风险</span>
-          <span className={styles.assessmentTag}>📊 数据合规</span>
-          <span className={styles.assessmentTag}>🔧 运维能力</span>
-          <span className={styles.assessmentTag}>⚖️ 决策建议</span>
-        </div>
-        <a href="/assessment/" className={styles.btnAssessment}>
-          开始免费评估 →
-        </a>
       </div>
 
       {/* Content Map */}
