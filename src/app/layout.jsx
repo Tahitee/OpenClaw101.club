@@ -78,6 +78,22 @@ export default async function RootLayout({ children }) {
       projectLink="https://github.com/Tahitee/OpenClaw101.club"
     >
       <a
+        href="/docs/cases/luxury-trade"
+        style={{
+          fontSize: '0.875rem',
+          fontWeight: 600,
+          color: '#ea580c',
+          textDecoration: 'none',
+          padding: '4px 12px',
+          borderRadius: '6px',
+          border: '1.5px solid #ea580c',
+          transition: 'all 0.2s',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        🔥 典型案例
+      </a>
+      <a
         href="/assessment/"
         style={{
           fontSize: '0.875rem',
@@ -89,6 +105,7 @@ export default async function RootLayout({ children }) {
           border: '1.5px solid #dc2626',
           transition: 'all 0.2s',
           whiteSpace: 'nowrap',
+          marginLeft: '8px',
         }}
       >
         📋 企业风险评估
